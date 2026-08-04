@@ -30,6 +30,12 @@ public final class LifelineState {
     /** Mountain — server tick when current cold season started (for status display). */
     public long bloodTributeStartTick = -1;
 
+    /** Emeralds deposited into the composter toward the current phase's quota. */
+    public int plainsQuotaPaid = 0;
+
+    /** Cold-season counter. Starts at 0; incremented before each quota check. */
+    public int plainsQuotaSeason = 0;
+
     private LifelineState() {}
 
     public void resetAll() {
@@ -38,5 +44,7 @@ public final class LifelineState {
         lastFurnaceDamageTick = -1;
         bloodTributeSatisfied = false;
         bloodTributeStartTick = -1;
+        plainsQuotaPaid = 0;
+        plainsQuotaSeason = 0;
     }
 }
