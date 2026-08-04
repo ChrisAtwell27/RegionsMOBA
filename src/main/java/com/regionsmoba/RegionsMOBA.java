@@ -12,6 +12,7 @@ import com.regionsmoba.deposit.DepositBreakHook;
 import com.regionsmoba.deposit.DepositTracker;
 import com.regionsmoba.economy.TraderInteraction;
 import com.regionsmoba.events.MassEventTargeting;
+import com.regionsmoba.hud.LifelineBars;
 import com.regionsmoba.lifeline.BloodTributeLifeline;
 import com.regionsmoba.lifeline.ComposterLifeline;
 import com.regionsmoba.lifeline.ConduitLifeline;
@@ -81,6 +82,7 @@ public class RegionsMOBA implements ModInitializer {
             TrialChamber.get().tick(server, tick);
             AbilityHooks.tick(server);
             VisualizationOverlays.tick(server, tick);
+            LifelineBars.get().tick(server, tick);
             MatchEndConditions.tick(server, tick);
         });
 
