@@ -17,6 +17,7 @@ import com.regionsmoba.team.TeamAssignments;
 import com.regionsmoba.team.TeamPassives;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -74,6 +75,11 @@ public final class DeathHandler {
             if (!MatchManager.get().isActive()) return;
             MatchPlayerState state = TeamAssignments.get().state(newPlayer.getUUID());
             if (state == null) return;
+            // Respawn replaces the ServerPlayer instance; Entity identity (id/hashCode)
+            // is per-instance, so the old instance is never deduped out of the boss bars'
+            // player sets by addPlayer's Set.add(). Detach it explicitly on both branches
+            // below, or it silently keeps receiving every future bar-update packet.
+            LifelineBars.get().removePlayer(oldPlayer);
             if (state.spectator) {
                 teleportToLobby(newPlayer);
                 LifelineBars.get().addSpectator(newPlayer);
@@ -90,6 +96,11 @@ public final class DeathHandler {
                 }
             }
         });
+
+        // Mid-match disconnect: detach from the timer and any lifeline bar so the
+        // connection doesn't keep receiving bar-update packets after it's gone.
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                LifelineBars.get().removePlayer(handler.player));
     }
 
     private static Player attackerOf(DamageSource source) {
