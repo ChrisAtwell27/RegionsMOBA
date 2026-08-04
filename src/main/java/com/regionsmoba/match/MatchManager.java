@@ -20,6 +20,7 @@ import com.regionsmoba.config.RegionsConfig;
 import com.regionsmoba.deposit.DepositTracker;
 import com.regionsmoba.events.MassEventTargeting;
 import com.regionsmoba.events.PermanentLossTracker;
+import com.regionsmoba.hud.LifelineBars;
 import com.regionsmoba.lifeline.LifelineState;
 import com.regionsmoba.lobby.LobbyFlow;
 import com.regionsmoba.lobby.NationsLobbyRegistry;
@@ -158,6 +159,7 @@ public final class MatchManager {
         NationsLobbyRegistry.get().clearAll();
         TeamAssignments.get().reset(matchPlayers);
         LifelineState.get().resetAll();
+        LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
         MassEventTargeting.get().resetAll();
@@ -269,6 +271,7 @@ public final class MatchManager {
         matchPlayers.clear();
         TeamAssignments.get().clearAll();
         LifelineState.get().resetAll();
+        LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
         MassEventTargeting.get().resetAll();
@@ -324,6 +327,7 @@ public final class MatchManager {
         matchPlayers.clear();
         TeamAssignments.get().clearAll();
         LifelineState.get().resetAll();
+        LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
         MassEventTargeting.get().resetAll();

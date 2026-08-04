@@ -6,6 +6,7 @@ import com.regionsmoba.classes.KitGrant;
 import com.regionsmoba.classes.impl.BerserkerAbility;
 import com.regionsmoba.config.BlockPosData;
 import com.regionsmoba.config.RegionsConfig;
+import com.regionsmoba.hud.LifelineBars;
 import com.regionsmoba.lifeline.LifelineState;
 import com.regionsmoba.lifeline.Lives;
 import com.regionsmoba.lobby.LobbyFlow;
@@ -75,11 +76,13 @@ public final class DeathHandler {
             if (state == null) return;
             if (state.spectator) {
                 teleportToLobby(newPlayer);
+                LifelineBars.get().addSpectator(newPlayer);
                 return;
             }
             if (state.team == null) return;
             LobbyFlow.teleportToTeamSpawn(newPlayer, state.team);
             TeamPassives.apply(newPlayer, state.team);
+            LifelineBars.get().addPlayer(newPlayer, state.team);
             if (state.biomeClass != null) {
                 KitGrant.grant(newPlayer, state.biomeClass);
                 if (state.biomeClass == com.regionsmoba.team.BiomeClass.MOUNTAIN_BERSERKER) {

@@ -5,6 +5,7 @@ import com.regionsmoba.classes.KitGrant;
 import com.regionsmoba.config.BlockPosData;
 import com.regionsmoba.config.RegionsConfig;
 import com.regionsmoba.events.PermanentLossTracker;
+import com.regionsmoba.hud.LifelineBars;
 import com.regionsmoba.team.BiomeClass;
 import com.regionsmoba.team.BiomeTeam;
 import com.regionsmoba.team.MatchPlayerState;
@@ -92,6 +93,7 @@ public final class LobbyFlow {
                 tell(sp, "Joined " + team.displayName() + ".", team.color());
                 teleportToTeamSpawn(sp, team);
                 TeamPassives.apply(sp, team);
+                LifelineBars.get().addPlayer(sp, team);
                 // Slight delay to ensure teleport completes before opening next menu.
                 openClassPicker(sp, team);
             }

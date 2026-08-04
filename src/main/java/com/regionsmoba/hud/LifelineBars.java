@@ -11,6 +11,9 @@ import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.BossEvent;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 /**
  * Owns every boss bar the mod shows. Bars are team-scoped: a player carries the
  * global timer plus their own team's lifeline. Updates run on a 10-tick cadence
@@ -26,6 +29,9 @@ public final class LifelineBars {
     private final ServerBossEvent timer = new ServerBossEvent(
             Component.empty(), BossEvent.BossBarColor.YELLOW, BossEvent.BossBarOverlay.PROGRESS);
 
+    /** One lifeline bar per team. Populated by Tasks 4-7; empty until then. */
+    private final Map<BiomeTeam, ServerBossEvent> lifelines = new EnumMap<>(BiomeTeam.class);
+
     private String lastTimerName = "";
     private float lastTimerProgress = -1.0f;
     private BossEvent.BossBarColor lastTimerColor;
@@ -40,14 +46,24 @@ public final class LifelineBars {
     /** Adds a player to the timer and to their team's lifeline bar. */
     public void addPlayer(ServerPlayer player, BiomeTeam team) {
         timer.addPlayer(player);
+        ServerBossEvent bar = lifelines.get(team);
+        if (bar != null) bar.addPlayer(player);
     }
 
     public void removePlayer(ServerPlayer player) {
         timer.removePlayer(player);
+        for (ServerBossEvent bar : lifelines.values()) bar.removePlayer(player);
+    }
+
+    /** Spectators watch every lifeline plus the timer. */
+    public void addSpectator(ServerPlayer player) {
+        timer.addPlayer(player);
+        for (ServerBossEvent bar : lifelines.values()) bar.addPlayer(player);
     }
 
     public void clearAll() {
         timer.removeAllPlayers();
+        for (ServerBossEvent bar : lifelines.values()) bar.removeAllPlayers();
         lastTimerName = "";
         lastTimerProgress = -1.0f;
         lastTimerColor = null;
