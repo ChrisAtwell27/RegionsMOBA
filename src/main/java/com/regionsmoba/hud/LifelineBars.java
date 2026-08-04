@@ -59,6 +59,7 @@ public final class LifelineBars {
     private String lastQuotaName = "";
     private float lastQuotaProgress = -1.0f;
     private BossEvent.BossBarColor lastQuotaColor;
+    private boolean lastQuotaUrgent;
 
     private LifelineBars() {
         lifelines.put(BiomeTeam.OCEAN, new ServerBossEvent(
@@ -112,6 +113,7 @@ public final class LifelineBars {
         lastQuotaName = "";
         lastQuotaProgress = -1.0f;
         lastQuotaColor = null;
+        lastQuotaUrgent = false;
         instance = null;
     }
 
@@ -276,23 +278,42 @@ public final class LifelineBars {
 
         int paid = PlainsQuota.paid();
         int quota = PlainsQuota.currentQuota();
-        boolean met = quota > 0 && paid >= quota;
+        // No living Plains members means quota <= 0: PlainsQuota.onPhaseChange no-ops
+        // in that case and no penalty can ever fire, so there is nothing to track.
+        boolean active = quota > 0;
+        boolean met = active && paid >= quota;
 
         Timeline tl = Timeline.get();
         // See updateBloodTribute for why secondsRemainingInPhase() * TICKS_PER_SECOND
         // is the correct ticks-remaining substitute for the nonexistent tickInPhase().
         int toCheck = tl.secondsRemainingInPhase() * Timeline.TICKS_PER_SECOND;
-        boolean urgent = !met && tl.phase() == MatchPhase.WARM && toCheck <= QUOTA_WARNING_TICKS;
+        // active guards this: never flag urgency for a check that cannot occur.
+        boolean urgent = active && !met && tl.phase() == MatchPhase.WARM && toCheck <= QUOTA_WARNING_TICKS;
 
-        String name = met
-                ? "Quota met"
-                : "Quota — " + paid + " / " + quota + " emeralds";
+        String name;
+        ChatFormatting style;
+        if (!active) {
+            name = "Quota — none active";
+            style = ChatFormatting.GRAY;
+        } else if (met) {
+            name = "Quota met";
+            style = ChatFormatting.GREEN;
+        } else {
+            name = "Quota — " + paid + " / " + quota + " emeralds";
+            style = urgent ? ChatFormatting.RED : ChatFormatting.GREEN;
+        }
+        // BarText.progress returns 0 whenever quota <= 0, so this already keeps the bar
+        // empty in the "none active" case without a separate branch.
         float progress = BarText.progress(paid, quota);
 
-        if (!name.equals(lastQuotaName)) {
-            bar.setName(Component.literal(name).withStyle(
-                    urgent ? ChatFormatting.RED : ChatFormatting.GREEN));
+        // urgent is time-based and can flip while paid/quota — and therefore name — stay
+        // constant, so the text-glyph color needs its own change check alongside the
+        // name-string check. Without it the strip recolors (guarded separately below)
+        // but the label keeps its old color for up to QUOTA_WARNING_TICKS.
+        if (!name.equals(lastQuotaName) || urgent != lastQuotaUrgent) {
+            bar.setName(Component.literal(name).withStyle(style));
             lastQuotaName = name;
+            lastQuotaUrgent = urgent;
         }
         if (progress != lastQuotaProgress) {
             bar.setProgress(progress);
