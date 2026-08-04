@@ -53,6 +53,12 @@ public final class RegionsConfig {
     public List<BlockDeposit> blockDeposits = new ArrayList<>();
     public List<MobDeposit> mobDeposits = new ArrayList<>();
 
+    /** Emeralds per Plains member for the first cold season; scales linearly per season. */
+    public int plainsQuotaBase = 24;
+
+    /** Ticks of furnace burn time that render as a full Nether boss bar. */
+    public int furnaceBarWindowTicks = 6000;
+
     private RegionsConfig() {}
 
     public static RegionsConfig get() {
