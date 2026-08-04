@@ -79,6 +79,26 @@ public final class ComposterLifeline {
         }
 
         ItemStack held = sp.getMainHandItem();
+
+        if (held.is(Items.EMERALD)) {
+            int want = sp.isShiftKeyDown() ? 1 : held.getCount();
+            int quota = PlainsQuota.currentQuota();
+            if (quota <= 0) {
+                tell(sp, "No quota is active right now.", ChatFormatting.GRAY);
+                return InteractionResult.SUCCESS;
+            }
+            int taken = PlainsQuota.pay(want);
+            if (taken == 0) {
+                tell(sp, "Quota already met — " + PlainsQuota.paid() + " / " + quota + ".",
+                        ChatFormatting.GREEN);
+                return InteractionResult.SUCCESS;
+            }
+            held.shrink(taken);
+            tell(sp, "Paid " + taken + " emeralds — " + PlainsQuota.paid() + " / " + quota + ".",
+                    ChatFormatting.GREEN);
+            return InteractionResult.SUCCESS;
+        }
+
         if (held.isEmpty() || !CROPS.contains(held.getItem())) {
             tell(sp, "Hold a crop (wheat, carrot, potato, beetroot, melon slice, pumpkin, sweet berries) to convert.",
                     ChatFormatting.GRAY);
