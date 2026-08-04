@@ -7,9 +7,8 @@ import com.regionsmoba.team.BiomeTeam;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.inventory.MerchantMenu;
 
 import java.util.UUID;
 
@@ -20,6 +19,7 @@ public final class TraderInteraction {
 
     public static void register() {
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
             if (world.isClientSide() || !(player instanceof ServerPlayer sp)) {
                 return InteractionResult.PASS;
             }
@@ -28,11 +28,14 @@ public final class TraderInteraction {
             BiomeTeam team = teamOfTrader(entity.getUUID());
             if (team == null) return InteractionResult.PASS;
 
+            // Merchant.openTradingScreen is the only path that sends the client a
+            // ClientboundMerchantOffersPacket (via Player.sendMerchantOffers once
+            // openMenu returns a present container id) — calling ServerPlayer.openMenu
+            // directly, as before, leaves the client's offer list empty.
             Component title = Component.literal(team.displayName() + " Trader");
-            sp.openMenu(new SimpleMenuProvider(
-                    (id, inv, p) -> new MerchantMenu(
-                            id, inv, new RegionsMerchant(TradeTables.offersFor(team))),
-                    title));
+            RegionsMerchant merchant = new RegionsMerchant(TradeTables.offersFor(team));
+            merchant.setTradingPlayer(sp);
+            merchant.openTradingScreen(sp, title, 1);
             return InteractionResult.SUCCESS;
         });
     }

@@ -2,6 +2,7 @@ package com.regionsmoba.lifeline;
 
 import com.regionsmoba.RegionsMOBA;
 import com.regionsmoba.events.PermanentLossTracker;
+import com.regionsmoba.hud.LifelineBars;
 import com.regionsmoba.team.MatchPlayerState;
 import com.regionsmoba.team.TeamAssignments;
 import net.minecraft.ChatFormatting;
@@ -53,6 +54,10 @@ public final class Lives {
         if (firstTransition && state.team != null) {
             PermanentLossTracker.get().recordPermanentLoss(state.team, player.level().getServer());
         }
+        // Route to the spectator bar set even outside a death/respawn cycle (e.g.
+        // PlainsQuota elimination, /regions debug lives ... 0). The timer and the
+        // player's own-team bar are already attached, so this only adds the rest.
+        LifelineBars.get().addSpectator(player);
         return true;
     }
 

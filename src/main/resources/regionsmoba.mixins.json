@@ -6,6 +6,7 @@
 		"CropGrowthMixin",
 		"FurnaceAccessor",
 		"LevelSetBlockMixin",
+		"MerchantMenuTradeSoundMixin",
 		"SignEditValidationMixin"
 	],
 	"injectors": {

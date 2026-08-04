@@ -101,6 +101,22 @@ public final class DeathHandler {
         // connection doesn't keep receiving bar-update packets after it's gone.
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 LifelineBars.get().removePlayer(handler.player));
+
+        // Mid-match relog: DISCONNECT above detaches, but with no JOIN counterpart a
+        // relogging player was never reattached — team-pick and respawn are the only
+        // other attach sites, and neither fires again on a plain reconnect. Without
+        // this the player sees no timer and no lifeline bar for the rest of the match.
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (!MatchManager.get().isActive()) return;
+            ServerPlayer player = handler.player;
+            MatchPlayerState state = TeamAssignments.get().state(player.getUUID());
+            if (state == null) return;
+            if (state.spectator) {
+                LifelineBars.get().addSpectator(player);
+            } else if (state.team != null) {
+                LifelineBars.get().addPlayer(player, state.team);
+            }
+        });
     }
 
     private static Player attackerOf(DamageSource source) {
