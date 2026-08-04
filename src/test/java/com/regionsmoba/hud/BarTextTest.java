@@ -2,6 +2,8 @@ package com.regionsmoba.hud;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BarTextTest {
@@ -38,5 +40,16 @@ class BarTextTest {
         assertEquals(1.0f, BarText.furnaceProgress(6000, 6000));
         assertEquals(0.5f, BarText.furnaceProgress(3000, 6000));
         assertEquals(0.0f, BarText.furnaceProgress(0, 6000));
+    }
+
+    @Test
+    void mmssUsesAsciiDigitsUnderAnyDefaultLocale() {
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("ar-SA"));
+            assertEquals("07:23", BarText.mmss(8860));
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 }
