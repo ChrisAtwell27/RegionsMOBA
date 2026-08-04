@@ -83,9 +83,24 @@ Offers are defined as per-team constants in code. Each trader both buys its regi
 | Sell | 6 emeralds → 1 netherite scrap |
 | Sell | 4 emeralds → 1 fire resistance potion |
 
-**No-arbitrage invariant.** No trader may buy and sell the same item or its direct smelting product, and any round trip through two offers must lose at least half its value. Verify this whenever a table is edited. Example check: 10 raw iron buys 1 emerald, and 4 emeralds sell 5 iron ingots, so 40 raw iron round-trips to 5 ingots — a heavy loss, as intended.
+**No-arbitrage invariant.** No trader may buy and sell the same item, and **any round trip through two offers must lose at least half its value**. The value test is the operative rule; verify it whenever a table is edited.
 
-Offers are set to effectively unlimited uses (`maxUses` high enough not to bind within a match) and villager restocking is irrelevant at these volumes. Traders remain protected and unkillable per `docs/src-md/reference/protected-areas.md`.
+Items linked by smelting are permitted where the round trip is checked and loss-making. Mountain is the live case: it buys raw iron at 10 → 1 emerald and sells 5 iron ingots for 4 emeralds, so 40 raw iron round-trips to 5 ingots, an 87% loss. The reverse leg does not exist, since no trader buys iron ingots and ingots do not smelt back. Recheck this specific pair if either row changes.
+
+Offers are set to effectively unlimited uses (`maxUses` high enough not to bind within a match). Traders remain protected and unkillable per `docs/src-md/reference/protected-areas.md`.
+
+### Trade delivery mechanism
+
+Offers are **not** attached to the entity as villager trades. Verified against the 1.21.11 mapped jar: `Piglin` implements `CrossbowAttackMob, InventoryCarrier` and does **not** implement `Merchant`, so the Nether Piglin cannot hold villager-style offers. Vanilla piglin bartering is a separate loot-table system and is not usable here. There is no `SimpleMerchant` class in this version.
+
+Instead, the mod supplies its own `Merchant` implementation and opens a trade screen directly:
+
+- A `RegionsMerchant implements net.minecraft.world.item.trading.Merchant` holds a fixed `MerchantOffers` for one team.
+- Right-clicking a registered trader entity opens `new MerchantMenu(containerId, playerInventory, merchant)` through `player.openMenu(...)`.
+
+This works for any entity type, so the Piglin is retained as documented, and it sidesteps villager professions, levelling, and restock behavior entirely. All four traders behave identically. The merchant screen is vanilla protocol, so vanilla clients are unaffected.
+
+Offers are built with `MerchantOffer(ItemCost costA, ItemStack result, int maxUses, int xp, float priceMultiplier)`, where `ItemCost(ItemLike item, int count)` expresses the buy side.
 
 ### Resulting loop
 
