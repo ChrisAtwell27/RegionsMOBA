@@ -15,6 +15,7 @@ import com.regionsmoba.lifeline.BloodTributeLifeline;
 import com.regionsmoba.lifeline.ComposterLifeline;
 import com.regionsmoba.lifeline.ConduitLifeline;
 import com.regionsmoba.lifeline.FurnaceLifeline;
+import com.regionsmoba.lifeline.PlainsQuota;
 import com.regionsmoba.lobby.LobbyFlow;
 import com.regionsmoba.match.MatchEndConditions;
 import com.regionsmoba.match.MatchManager;
@@ -64,7 +65,10 @@ public class RegionsMOBA implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             long tick = server.getTickCount();
             Timeline.PhaseChange change = Timeline.get().tick();
-            if (change != null) BloodTributeLifeline.onPhaseChange(change, server);
+            if (change != null) {
+                BloodTributeLifeline.onPhaseChange(change, server);
+                PlainsQuota.onPhaseChange(server, change.from(), change.to());
+            }
             ColdSeasonEffects.tick(server, tick);
             NetherColdWater.tick(server, tick);
             OceanWaterFreeze.tick(server, tick);
