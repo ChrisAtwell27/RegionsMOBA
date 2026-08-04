@@ -3,9 +3,6 @@
 .gradle/
 build/
 out/
-classes/
-!docs/**/classes/
-!docs/**/classes/**
 
 # eclipse
 
