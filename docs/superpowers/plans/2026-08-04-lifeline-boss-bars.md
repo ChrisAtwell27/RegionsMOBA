@@ -94,6 +94,8 @@ Create `src/main/java/com/regionsmoba/hud/BarText.java`:
 ```java
 package com.regionsmoba.hud;
 
+import java.util.Locale;
+
 /**
  * Pure formatting and normalisation for the lifeline boss bars. Free of Minecraft
  * types so it can be unit-tested without bootstrapping a server.
@@ -104,10 +106,17 @@ public final class BarText {
 
     private BarText() {}
 
-    /** Renders a tick count as mm:ss, clamping negatives to zero. */
+    /**
+     * Renders a tick count as mm:ss, clamping negatives to zero.
+     *
+     * Locale.ROOT is required, not cosmetic: the default-locale overload of
+     * String.format emits Arabic-Indic, Bengali, or Devanagari numerals under
+     * locales such as ar-SA, fa-IR, bn-BD and ne-NP, which render as tofu in
+     * Minecraft's font. The server's default locale must not reach the HUD.
+     */
     public static String mmss(int ticks) {
         int total = Math.max(0, ticks) / TICKS_PER_SECOND;
-        return String.format("%02d:%02d", total / 60, total % 60);
+        return String.format(Locale.ROOT, "%02d:%02d", total / 60, total % 60);
     }
 
     /** Clamped current/max, returning 0 when max is non-positive. */
