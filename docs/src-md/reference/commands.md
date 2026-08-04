@@ -160,7 +160,8 @@ Toggles particle overlays for registered zones and objects. Toggling a second ti
 | `/regions debug conduit hp <0-200>` | Set Ocean Conduit HP |
 | `/regions debug furnace <lit\|unlit>` | Force Nether Furnace state |
 | `/regions debug furnace fuel <ticks>` | Set remaining fuel ticks in the Nether Furnace |
-| `/regions debug composter uses <count>` | Set emerald-conversion count since match start (for economy debugging) |
+| `/regions debug quota set <amount>` | Set the Plains quota's paid-so-far emerald count |
+| `/regions debug quota info` | Print the Plains quota's paid/owed amounts, season, and living Plains member count |
 
 ### Deposits
 

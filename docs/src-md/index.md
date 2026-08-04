@@ -10,7 +10,7 @@ The mod is dormant by default. A game starts when an admin places a `[Nations]` 
 | --- | --- |
 | Ocean | 200-HP conduit. At 0 HP, next ocean death is final. |
 | Nether | Furnace must stay burning. Damage floor of 1 heart. Permanent fire resistance. |
-| Plains | No structural lifeline. Sole source of emeralds. |
+| Plains | Emerald Quota each cold season. Miss it and every plains player loses a life. |
 | Mountain | Blood Tribute each cold season. Miss it and every dwarf loses a life. |
 
 ## Cold Season
