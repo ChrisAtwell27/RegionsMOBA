@@ -8,9 +8,9 @@ The mod repurposes vanilla Minecraft boss bars — the bar UI normally reserved 
 | --- | --- |
 | Ocean player | Timer, Conduit |
 | Nether player | Timer, Furnace |
-| Mountain player | Timer, Blood Tribute |
+| Mountain player | Timer, Blood Tribute (cold seasons only) |
 | Plains player | Timer, Quota |
-| Spectator | Timer, Conduit, Furnace, Blood Tribute, Quota |
+| Spectator | Timer, Conduit, Furnace, Blood Tribute (cold seasons only), Quota |
 
 ## Timer
 
@@ -55,7 +55,7 @@ Hidden entirely during Warm phases. The bar appears the moment cold season start
 
 Counts down the same way the Timer does, draining across the cold phase, until satisfied — at which point it jumps to full and turns green.
 
-This bar is currently the only in-game confirmation that the tribute has been satisfied. Satisfying it only logs server-side; no chat message goes out to the mountain team. See [Mountain](../teams/mountain.md) for what satisfies the tribute.
+The bar turning green is the only immediate confirmation that the tribute landed — satisfying it only logs server-side, with no chat message at that instant. A chat confirmation does follow, but not until the end of cold season, when a satisfied tribute broadcasts `Blood Tribute satisfied — no penalty.` to the mountain team. Until then, the bar is the only real-time signal. See [Mountain](../teams/mountain.md) for what satisfies the tribute.
 
 ## Plains: Quota
 
