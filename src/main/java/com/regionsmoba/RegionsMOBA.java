@@ -10,6 +10,7 @@ import com.regionsmoba.death.DeathHandler;
 import com.regionsmoba.debug.VisualizationOverlays;
 import com.regionsmoba.deposit.DepositBreakHook;
 import com.regionsmoba.deposit.DepositTracker;
+import com.regionsmoba.economy.TraderInteraction;
 import com.regionsmoba.events.MassEventTargeting;
 import com.regionsmoba.lifeline.BloodTributeLifeline;
 import com.regionsmoba.lifeline.ComposterLifeline;
@@ -51,6 +52,7 @@ public class RegionsMOBA implements ModInitializer {
         DepositBreakHook.register();
         DeathHandler.register();
         AbilityHooks.register();
+        TraderInteraction.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> MatchManager.get().attachServer(server));
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
