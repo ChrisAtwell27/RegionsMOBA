@@ -14,6 +14,7 @@ import com.regionsmoba.deposit.DepositTracker;
 import com.regionsmoba.events.PermanentLossTracker;
 import com.regionsmoba.lifeline.BloodTributeLifeline;
 import com.regionsmoba.lifeline.LifelineState;
+import com.regionsmoba.lifeline.PlainsQuota;
 import com.regionsmoba.match.MatchManager;
 import com.regionsmoba.protection.BuildMode;
 import com.regionsmoba.pvp.PvpManager;
@@ -183,10 +184,13 @@ public final class DebugCommands {
                         .then(Commands.literal("hp")
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(0, 200))
                                         .executes(ctx -> setConduitHp(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "amount"))))))
-                .then(Commands.literal("composter")
-                        .then(Commands.literal("uses")
-                                .then(Commands.argument("count", IntegerArgumentType.integer(0))
-                                        .executes(ctx -> setComposterUses(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "count"))))))
+                .then(Commands.literal("quota")
+                        .then(Commands.literal("set")
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(0))
+                                        .executes(ctx -> quotaSet(ctx.getSource(),
+                                                IntegerArgumentType.getInteger(ctx, "amount")))))
+                        .then(Commands.literal("info")
+                                .executes(ctx -> quotaInfo(ctx.getSource()))))
                 .then(Commands.literal("deposit")
                         .then(Commands.literal("info").executes(ctx -> depositInfo(ctx.getSource()))))
                 .then(Commands.literal("reload").executes(ctx -> reload(ctx.getSource()))));
@@ -552,7 +556,7 @@ public final class DebugCommands {
         return 1;
     }
 
-    // ---- furnace / conduit / composter / deposit / reload ----
+    // ---- furnace / conduit / quota / deposit / reload ----
 
     private static int setFurnaceLit(CommandSourceStack src, boolean lit) {
         BlockPosData pos = RegionsConfig.get().furnace;
@@ -607,10 +611,17 @@ public final class DebugCommands {
         return 1;
     }
 
-    private static int setComposterUses(CommandSourceStack src, int count) {
-        // Composter use tracking isn't currently persisted (lifeline only acts on right-click).
-        // This command is a no-op stub for now — kept registered so the doc surface is satisfied.
-        CommandHelpers.warn(src, "Composter uses counter is not currently tracked (no-op).");
+    private static int quotaSet(CommandSourceStack src, int amount) {
+        LifelineState.get().plainsQuotaPaid = amount;
+        CommandHelpers.ok(src, "Plains quota paid set to " + amount + ".");
+        return 1;
+    }
+
+    private static int quotaInfo(CommandSourceStack src) {
+        CommandHelpers.info(src, "Plains quota: " + PlainsQuota.paid()
+                + " / " + PlainsQuota.currentQuota()
+                + "  (season " + (LifelineState.get().plainsQuotaSeason + 1)
+                + ", members " + PlainsQuota.livingMembers() + ")");
         return 1;
     }
 
