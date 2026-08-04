@@ -371,6 +371,7 @@ public final class DebugCommands {
             return 0;
         }
         BloodTributeLifeline.onPhaseChange(change, src.getServer());
+        PlainsQuota.onPhaseChange(src.getServer(), change.from(), change.to());
         CommandHelpers.ok(src, "Phase forced to " + target);
         return 1;
     }
