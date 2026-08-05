@@ -1,14 +1,23 @@
 package com.regionsmoba.classes;
 
 import com.regionsmoba.team.BiomeClass;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.regionsmoba.classes.ItemTags.named;
+import static com.regionsmoba.classes.ItemTags.potion;
 import static com.regionsmoba.classes.ItemTags.stack;
 import static com.regionsmoba.classes.ItemTags.tool;
 
@@ -63,6 +72,27 @@ public final class ClassKits {
 
         private Names() {}
     }
+
+    /** One enchantment to stamp onto a kit item at grant time. */
+    public record EnchantSpec(ResourceKey<Enchantment> enchantment, int level) {}
+
+    /**
+     * Enchantments applied per class, per item. They can't live in the static
+     * kit templates above: {@link ItemStack#enchant} needs an {@link Enchantment}
+     * holder, which only exists once the server's registries are loaded, so
+     * {@link KitGrant} applies these to each copy at grant time.
+     *
+     * Keyed by class rather than by item name because the enchanted items aren't
+     * all named — the Archer's Punch I bow is a plain bow, and the Acrobat's bow
+     * in the same kit table must stay unenchanted.
+     */
+    private static final Map<BiomeClass, Map<Item, List<EnchantSpec>>> ENCHANTS = Map.of(
+            BiomeClass.MOUNTAIN_MINER, Map.of(
+                    Items.STONE_PICKAXE, List.of(
+                            new EnchantSpec(Enchantments.EFFICIENCY, 1),
+                            new EnchantSpec(Enchantments.UNBREAKING, 1))),
+            BiomeClass.PLAINS_ARCHER, Map.of(
+                    Items.BOW, List.of(new EnchantSpec(Enchantments.PUNCH, 1))));
 
     private static final Map<BiomeClass, List<ItemStack>> KITS = new EnumMap<>(BiomeClass.class);
 
@@ -170,7 +200,7 @@ public final class ClassKits {
                 tool(Items.WOODEN_AXE),
                 tool(Items.WOODEN_SHOVEL),
                 named(Items.ARROW, Names.ARROW_OF_INFINITY),
-                tool(Items.POTION)));
+                potion(Items.POTION, Potions.HEALING)));
 
         KITS.put(BiomeClass.PLAINS_SPY, List.of(
                 tool(Items.GOLDEN_SWORD),
@@ -222,7 +252,7 @@ public final class ClassKits {
                 tool(Items.WOODEN_PICKAXE),
                 tool(Items.WOODEN_AXE),
                 tool(Items.WOODEN_SHOVEL),
-                tool(Items.POTION),
+                potion(Items.POTION, Potions.HEALING),
                 named(Items.BLAZE_POWDER, Names.FRENZY)));
 
         KITS.put(BiomeClass.MOUNTAIN_BERSERKER, List.of(
@@ -261,5 +291,21 @@ public final class ClassKits {
 
     public static List<ItemStack> kit(BiomeClass biomeClass) {
         return KITS.getOrDefault(biomeClass, List.of());
+    }
+
+    /**
+     * Stamps this stack's configured enchantments onto it, in place. Matched by
+     * the item's custom name, the same key the ability classes match on, so a
+     * renamed kit item and its enchantments can never drift apart.
+     */
+    public static void applyEnchantments(ItemStack stack, BiomeClass biomeClass, RegistryAccess registries) {
+        Map<Item, List<EnchantSpec>> byItem = ENCHANTS.get(biomeClass);
+        if (byItem == null) return;
+        List<EnchantSpec> specs = byItem.get(stack.getItem());
+        if (specs == null) return;
+        HolderGetter<Enchantment> lookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
+        for (EnchantSpec spec : specs) {
+            stack.enchant(lookup.getOrThrow(spec.enchantment()), spec.level());
+        }
     }
 }

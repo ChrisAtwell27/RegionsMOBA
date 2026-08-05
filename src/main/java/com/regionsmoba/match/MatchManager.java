@@ -3,7 +3,9 @@ package com.regionsmoba.match;
 import com.regionsmoba.RegionsMOBA;
 import com.regionsmoba.chamber.TrialChamber;
 import com.regionsmoba.classes.Cooldowns;
+import com.regionsmoba.classes.DamageModifiers;
 import com.regionsmoba.classes.impl.BardAbility;
+import com.regionsmoba.classes.impl.DefenderAbility;
 import com.regionsmoba.classes.impl.BerserkerAbility;
 import com.regionsmoba.classes.impl.BloodmageAbility;
 import com.regionsmoba.classes.impl.ImmobilizerAbility;
@@ -213,6 +215,22 @@ public final class MatchManager {
         }
     }
 
+    /**
+     * Strips the transient per-class attribute modifiers from every match player
+     * still online. Call before {@code matchPlayers.clear()} — that set is the
+     * only handle on who was in the match.
+     */
+    private void clearClassAttributes() {
+        if (server == null) return;
+        for (UUID id : matchPlayers) {
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p == null) continue;
+            DamageModifiers.clear(p);
+            DefenderAbility.clearBonusHp(p);
+            BerserkerAbility.clearStack(p);
+        }
+    }
+
     private void broadcastToMatch(String msg, ChatFormatting color) {
         if (server == null) return;
         Component c = Component.literal(msg).withStyle(color);
@@ -268,6 +286,10 @@ public final class MatchManager {
             }
         }
         snapshots.clear();
+        // Class attribute modifiers live on the ServerPlayer, and the players stay
+        // online past match end — strip them here or the Warrior's +1 melee and the
+        // Defender's conduit HP bonus follow them into the lobby.
+        clearClassAttributes();
         matchPlayers.clear();
         TeamAssignments.get().clearAll();
         LifelineState.get().resetAll();

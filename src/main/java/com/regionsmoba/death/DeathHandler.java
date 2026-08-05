@@ -59,10 +59,10 @@ public final class DeathHandler {
             MatchPlayerState state = TeamAssignments.get().state(victim.getUUID());
             if (state == null || state.spectator) return;
 
-            // Berserker death penalty (-5 hearts) applies before life decrement.
-            if (state.biomeClass == com.regionsmoba.team.BiomeClass.MOUNTAIN_BERSERKER) {
-                BerserkerAbility.onBerserkerDeath(victim);
-            }
+            // Berserker death penalty (-5 hearts) applies before life decrement, and
+            // applies whatever class the player died on — the pool belongs to the
+            // player, not the current class, per mountain-classes.md.
+            BerserkerAbility.onPlayerDeath(victim);
 
             if (state.team == BiomeTeam.OCEAN && LifelineState.get().oceanPermadeath) {
                 Lives.enterSpectator(victim, state, "Conduit destroyed — final death");

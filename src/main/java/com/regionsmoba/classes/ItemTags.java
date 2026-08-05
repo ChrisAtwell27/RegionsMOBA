@@ -1,11 +1,13 @@
 package com.regionsmoba.classes;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.PotionContents;
 
 /**
  * Builders for kit ItemStacks with the conventions used across all classes:
@@ -46,6 +48,17 @@ public final class ItemTags {
         return new ItemStack(item);
     }
 
+    /**
+     * A filled potion. The {@code Potions.*} constants are registry holders
+     * bound during bootstrap, so this is safe from a kit's static initializer —
+     * those run on first kit grant, long after registries are loaded.
+     */
+    public static ItemStack potion(Item item, Holder<Potion> potion) {
+        ItemStack stack = new ItemStack(item);
+        stack.set(DataComponents.POTION_CONTENTS, new PotionContents(potion));
+        return stack;
+    }
+
     /** Convenience: returns true if the stack's custom name matches exactly. */
     public static boolean hasName(ItemStack stack, String name) {
         if (stack == null || stack.isEmpty()) return false;
@@ -53,12 +66,4 @@ public final class ItemTags {
         return custom != null && name.equals(custom.getString());
     }
 
-    /** Apply a single enchantment level to a stack (used for Efficiency I tools, etc.). */
-    public static ItemStack withEfficiencyI(ItemStack stack) {
-        return stack; // Slice 9a stub: enchantment application requires registry lookup at runtime;
-                     // kits ship with vanilla items for now. Polish pass.
-    }
-
-    @SuppressWarnings("unused")
-    private static final Object KEEP_ENCHANTMENTS = Enchantments.class;
 }
