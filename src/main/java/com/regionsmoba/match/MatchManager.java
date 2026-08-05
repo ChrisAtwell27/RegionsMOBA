@@ -2,6 +2,7 @@ package com.regionsmoba.match;
 
 import com.regionsmoba.RegionsMOBA;
 import com.regionsmoba.chamber.TrialChamber;
+import com.regionsmoba.classes.AbilityHooks;
 import com.regionsmoba.classes.Cooldowns;
 import com.regionsmoba.classes.DamageModifiers;
 import com.regionsmoba.classes.impl.BardAbility;
@@ -168,6 +169,7 @@ public final class MatchManager {
         TrialChamber.get().resetAll();
         TrialChamber.get().onMatchStart(server.getTickCount());
         Cooldowns.get().clearAll();
+        AbilityHooks.clearAll();
         WarriorAbility.clearAll();
         BardAbility.clearAll();
         BerserkerAbility.clearAll();
@@ -228,6 +230,7 @@ public final class MatchManager {
             DamageModifiers.clear(p);
             DefenderAbility.clearBonusHp(p);
             BerserkerAbility.clearStack(p);
+            BloodmageAbility.clearCurse(p);
         }
     }
 
@@ -299,6 +302,7 @@ public final class MatchManager {
         MassEventTargeting.get().resetAll();
         TrialChamber.get().resetAll();
         Cooldowns.get().clearAll();
+        AbilityHooks.clearAll();
         WarriorAbility.clearAll();
         BardAbility.clearAll();
         BerserkerAbility.clearAll();
@@ -355,6 +359,7 @@ public final class MatchManager {
         MassEventTargeting.get().resetAll();
         TrialChamber.get().resetAll();
         Cooldowns.get().clearAll();
+        AbilityHooks.clearAll();
         WarriorAbility.clearAll();
         BardAbility.clearAll();
         BerserkerAbility.clearAll();

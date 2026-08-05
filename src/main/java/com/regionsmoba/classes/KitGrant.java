@@ -1,9 +1,13 @@
 package com.regionsmoba.classes;
 
+import com.regionsmoba.classes.impl.BardAbility;
 import com.regionsmoba.classes.impl.BerserkerAbility;
+import com.regionsmoba.classes.impl.BloodmageAbility;
 import com.regionsmoba.classes.impl.LumberjackAbility;
 import com.regionsmoba.classes.impl.MinerAbility;
+import com.regionsmoba.classes.impl.TinkererAbility;
 import com.regionsmoba.classes.impl.WarriorAbility;
+import com.regionsmoba.classes.impl.WizardAbility;
 import com.regionsmoba.team.BiomeClass;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -38,6 +42,12 @@ public final class KitGrant {
         Cooldowns.get().clearForPlayer(player.getUUID());
         WarriorAbility.clearForPlayer(player.getUUID());
         MinerAbility.clearForPlayer(player.getUUID());
+        BardAbility.clearForPlayer(player.getUUID());
+        TinkererAbility.clearForPlayer(player.getUUID());
+        WizardAbility.clearForPlayer(player.getUUID());
+        // A Bloodmage curse is a debuff on the *victim*, so this clears one the
+        // player is carrying, not one they cast.
+        BloodmageAbility.clearCurse(player);
         LumberjackAbility.clearForPlayer(player.getUUID());
         DamageModifiers.apply(player, biomeClass);
         // Berserker hearts are the exception: the banked pool survives class
