@@ -1,6 +1,8 @@
 package com.regionsmoba.classes;
 
 import com.regionsmoba.classes.impl.BerserkerAbility;
+import com.regionsmoba.classes.impl.LumberjackAbility;
+import com.regionsmoba.classes.impl.MinerAbility;
 import com.regionsmoba.classes.impl.WarriorAbility;
 import com.regionsmoba.team.BiomeClass;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,6 +37,8 @@ public final class KitGrant {
         // effects belong to the previous life / previous class.
         Cooldowns.get().clearForPlayer(player.getUUID());
         WarriorAbility.clearForPlayer(player.getUUID());
+        MinerAbility.clearForPlayer(player.getUUID());
+        LumberjackAbility.clearForPlayer(player.getUUID());
         DamageModifiers.apply(player, biomeClass);
         // Berserker hearts are the exception: the banked pool survives class
         // changes and deaths, so applyStack re-applies it (or strips the max-HP

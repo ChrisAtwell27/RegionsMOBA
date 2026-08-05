@@ -7,6 +7,7 @@ import com.regionsmoba.match.MatchManager;
 import com.regionsmoba.protection.BlockProtection;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 /**
  * Post-break hook that runs the deposit aftermath:
@@ -29,7 +30,10 @@ public final class DepositBreakHook {
 
             OreDeposit ore = BlockProtection.oreDepositAt(posData);
             if (ore != null) {
-                DepositTracker.get().onOreMined(level, pos, ore, tick);
+                // The breaking player is passed through so a Miner's Gold Rush
+                // can waive the Cold Season regen penalty.
+                ServerPlayer miner = player instanceof ServerPlayer sp ? sp : null;
+                DepositTracker.get().onOreMined(level, pos, ore, tick, miner);
                 return;
             }
             BlockDeposit block = BlockProtection.blockDepositAt(posData);

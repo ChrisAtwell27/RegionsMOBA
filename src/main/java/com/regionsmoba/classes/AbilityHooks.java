@@ -2,12 +2,16 @@ package com.regionsmoba.classes;
 
 import com.regionsmoba.classes.impl.AcrobatAbility;
 import com.regionsmoba.classes.impl.AlchemistAbility;
+import com.regionsmoba.classes.impl.ArcherAbility;
 import com.regionsmoba.classes.impl.BerserkerAbility;
 import com.regionsmoba.classes.impl.BuilderAbility;
 import com.regionsmoba.classes.impl.DefenderAbility;
 import com.regionsmoba.classes.impl.EnchanterAbility;
 import com.regionsmoba.classes.impl.FarmerAbility;
 import com.regionsmoba.classes.impl.HealerAbility;
+import com.regionsmoba.classes.impl.ImmobilizerAbility;
+import com.regionsmoba.classes.impl.LumberjackAbility;
+import com.regionsmoba.classes.impl.MinerAbility;
 import com.regionsmoba.classes.impl.NeptuneGroundFreeze;
 import com.regionsmoba.classes.impl.RiftWalkerAbility;
 import com.regionsmoba.classes.impl.ScoutAbility;
@@ -20,9 +24,11 @@ import com.regionsmoba.team.MatchPlayerState;
 import com.regionsmoba.team.TeamAssignments;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -95,13 +101,30 @@ public final class AbilityHooks {
                 });
 
         ServerLivingEntityEvents.AFTER_DEATH.register(WarriorAbility::onEnemyDeath);
+
+        // Post-break bonus drops. Runs alongside DepositBreakHook's AFTER
+        // listener; both read the captured pre-break state, so listener order
+        // between them doesn't matter.
+        PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
+            if (!MatchManager.get().isActive()) return;
+            if (!(world instanceof ServerLevel level)) return;
+            if (!(player instanceof ServerPlayer serverPlayer)) return;
+            BiomeClass bc = classOf(serverPlayer);
+            if (bc == null) return;
+            switch (bc) {
+                case MOUNTAIN_MINER -> MinerAbility.onBlockBroken(level, serverPlayer, pos, state);
+                case PLAINS_LUMBERJACK -> LumberjackAbility.onBlockBroken(level, serverPlayer, pos, state);
+                default -> {}
+            }
+        });
     }
 
     private static InteractionResult onRightClick(Player player, boolean clientSide, InteractionHand hand) {
         if (clientSide) return InteractionResult.PASS;
         if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
+        // An empty hand still dispatches: the Immobilizer's stun has no ability
+        // item and is cast bare-handed.
         ItemStack stack = player.getItemInHand(hand);
-        if (stack.isEmpty()) return InteractionResult.PASS;
         // SUCCESS_SERVER: the ability consumed the click; don't also run the
         // vanilla use behaviour of the underlying item (drinking, placing, …).
         return dispatchRightClick(serverPlayer, stack)
@@ -129,8 +152,26 @@ public final class AbilityHooks {
             case MOUNTAIN_BUILDER -> BuilderAbility.tryRightClick(player, stack);
             case MOUNTAIN_WARRIOR -> WarriorAbility.tryRightClick(player, stack);
             case MOUNTAIN_BERSERKER -> BerserkerAbility.tryRightClick(player, stack);
+            case OCEAN_IMMOBILIZER -> ImmobilizerAbility.tryRightClick(player);
+            case MOUNTAIN_MINER -> MinerAbility.tryRightClick(player, stack);
+            case PLAINS_LUMBERJACK -> LumberjackAbility.tryRightClick(player, stack);
             default -> false;
         };
+    }
+
+    /**
+     * Every main-hand swing, routed here by {@link com.regionsmoba.mixin.PlayerSwingMixin}.
+     * Fabric's attack callbacks only fire on a swing that connects; left-click
+     * abilities are cast at empty air just as often.
+     */
+    public static void onSwing(ServerPlayer player) {
+        if (!MatchManager.get().isActive()) return;
+        BiomeClass bc = classOf(player);
+        if (bc == null) return;
+        switch (bc) {
+            case OCEAN_IMMOBILIZER -> ImmobilizerAbility.trySwing(player);
+            default -> {}
+        }
     }
 
     private static void onAfterDamage(LivingEntity victim, DamageSource source, float damageTaken) {
@@ -147,6 +188,14 @@ public final class AbilityHooks {
             VampireAbility.onMeleeHit(attacker, victimPlayer);
         }
 
+        if (source.getEntity() instanceof ServerPlayer attacker
+                && source.getDirectEntity() == attacker
+                && victim instanceof Player victimPlayer
+                && attacker != victim
+                && classOf(attacker) == BiomeClass.PLAINS_LUMBERJACK) {
+            LumberjackAbility.onAxeHit(attacker, victimPlayer);
+        }
+
         if (victim instanceof ServerPlayer hurtPlayer
                 && classOf(hurtPlayer) == BiomeClass.PLAINS_SCOUT) {
             ScoutAbility.onScoutHit(hurtPlayer);
@@ -161,6 +210,8 @@ public final class AbilityHooks {
         NeptuneGroundFreeze.tick(server, tick);
         WarriorAbility.tick(server, tick);
         BerserkerAbility.tick(server, tick);
+        MinerAbility.tick(server, tick);
+        LumberjackAbility.tick(server, tick);
 
         for (UUID id : MatchManager.get().matchPlayers()) {
             ServerPlayer player = server.getPlayerList().getPlayer(id);
@@ -170,6 +221,7 @@ public final class AbilityHooks {
             switch (state.biomeClass) {
                 case MOUNTAIN_ACROBAT -> AcrobatAbility.tick(player);
                 case OCEAN_DEFENDER -> DefenderAbility.tick(player, tick);
+                case PLAINS_ARCHER -> ArcherAbility.tick(player);
                 default -> {}
             }
         }

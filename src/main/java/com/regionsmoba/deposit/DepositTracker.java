@@ -1,6 +1,7 @@
 package com.regionsmoba.deposit;
 
 import com.regionsmoba.RegionsMOBA;
+import com.regionsmoba.classes.impl.MinerAbility;
 import com.regionsmoba.config.Area;
 import com.regionsmoba.config.BlockDeposit;
 import com.regionsmoba.config.BlockPosData;
@@ -17,6 +18,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -68,10 +70,17 @@ public final class DepositTracker {
         mobNextSpawn.clear();
     }
 
-    /** Called when an ore deposit was just mined. Replaces the broken air with cobblestone and schedules regen. */
-    public void onOreMined(ServerLevel level, BlockPos pos, OreDeposit deposit, long globalTick) {
+    /**
+     * Called when an ore deposit was just mined. Replaces the broken air with
+     * cobblestone and schedules regen.
+     *
+     * {@code miner} is the player who broke it, used only to check for an active
+     * Gold Rush; null is accepted for callers with no player context.
+     */
+    public void onOreMined(ServerLevel level, BlockPos pos, OreDeposit deposit, long globalTick,
+                           ServerPlayer miner) {
         level.setBlock(pos, Blocks.COBBLESTONE.defaultBlockState(), Block.UPDATE_ALL);
-        long regenTicks = computeRegenTicks(deposit, level);
+        long regenTicks = computeRegenTicks(deposit, level, miner);
         oreCooldowns.put(deposit.pos(), globalTick + regenTicks);
     }
 
@@ -148,11 +157,13 @@ public final class DepositTracker {
         if (spawned != null) ModEntities.track(spawned);
     }
 
-    private long computeRegenTicks(OreDeposit deposit, ServerLevel level) {
+    private long computeRegenTicks(OreDeposit deposit, ServerLevel level, ServerPlayer miner) {
         long base = (long) deposit.regenSeconds() * Timeline.TICKS_PER_SECOND;
         // Mountain cold-season scaling: 2x cooldown for ore deposits inside the
-        // registered Mountain biome bounds while the phase is COLD.
+        // registered Mountain biome bounds while the phase is COLD. A Miner with
+        // Gold Rush up is exempt, per docs/src-md/classes/mountain-classes.md.
         if (Timeline.get().phase() == MatchPhase.COLD && isInsideMountain(deposit.pos(), level)) {
+            if (miner != null && MinerAbility.isGoldRushActive(miner.getUUID())) return base;
             return base * 2L;
         }
         return base;
