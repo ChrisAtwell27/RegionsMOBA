@@ -10,11 +10,13 @@ import com.regionsmoba.classes.KitGrant;
 import com.regionsmoba.command.CommandHelpers;
 import com.regionsmoba.config.BlockPosData;
 import com.regionsmoba.config.RegionsConfig;
+import com.regionsmoba.debug.TestMode;
 import com.regionsmoba.deposit.DepositTracker;
 import com.regionsmoba.events.PermanentLossTracker;
 import com.regionsmoba.lifeline.BloodTributeLifeline;
 import com.regionsmoba.lifeline.LifelineState;
 import com.regionsmoba.lifeline.PlainsQuota;
+import com.regionsmoba.lobby.LobbyFlow;
 import com.regionsmoba.match.MatchManager;
 import com.regionsmoba.protection.BuildMode;
 import com.regionsmoba.pvp.PvpManager;
@@ -89,6 +91,15 @@ public final class DebugCommands {
                                                 ctx.getSource(),
                                                 EntityArgument.getPlayer(ctx, "player"),
                                                 StringArgumentType.getString(ctx, "biome"))))))
+                .then(Commands.literal("testmode")
+                        .then(Commands.literal("on").executes(ctx -> testMode(ctx.getSource(), true)))
+                        .then(Commands.literal("off").executes(ctx -> testMode(ctx.getSource(), false))))
+                .then(Commands.literal("win")
+                        .then(Commands.argument("biome", StringArgumentType.word())
+                                .suggests(CommandHelpers.BIOME_SUGGESTIONS)
+                                .executes(ctx -> forceWin(
+                                        ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "biome")))))
                 .then(Commands.literal("class")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(Commands.argument("class", StringArgumentType.word())
@@ -238,22 +249,111 @@ public final class DebugCommands {
         return 1;
     }
 
+    // ---- solo test mode / manual match end ----
+
+    /**
+     * Solo playtest toggle. Starts a match if none is running, adds the sender so
+     * every other debug command can act on them, and suppresses automatic match
+     * end until switched off.
+     */
+    private static int testMode(CommandSourceStack src, boolean on) {
+        if (!on) {
+            if (!TestMode.isActive()) {
+                CommandHelpers.warn(src, "Test mode is already off.");
+                return 0;
+            }
+            TestMode.set(false);
+            CommandHelpers.ok(src, "Test mode off — automatic match end is live again.");
+            return 1;
+        }
+
+        if (TestMode.isActive()) {
+            CommandHelpers.warn(src, "Test mode is already on.");
+            return 0;
+        }
+
+        ServerPlayer sender = src.getPlayer();
+        if (sender == null) {
+            CommandHelpers.fail(src, "Run this as a player — test mode adds the sender to the match.");
+            return 0;
+        }
+
+        MatchManager match = MatchManager.get();
+        boolean started = false;
+        if (!match.isActive()) {
+            match.start(src.getServer());
+            started = true;
+        }
+
+        // Order matters: MatchManager.start() runs a reset path that calls
+        // TestMode.clear(). Setting the flag before the start would silently wipe
+        // it, leaving a match that still auto-ends — and it looks like it worked
+        // until a winner is declared mid-playtest. Never hoist this above start().
+        match.addMatchPlayer(sender.getUUID());
+        TeamAssignments.get().join(sender.getUUID());
+        TestMode.set(true);
+
+        CommandHelpers.ok(src, started
+                ? "Match started, test mode on — pick a team."
+                : "Test mode on — you have joined the running match.");
+        LobbyFlow.openTeamPicker(sender);
+        return 1;
+    }
+
+    /**
+     * Manually declares a winner and ends the match. Broadcasts the same line
+     * MatchEndConditions uses on a natural end so both paths read identically.
+     */
+    private static int forceWin(CommandSourceStack src, String biomeId) {
+        Optional<BiomeTeam> team = BiomeTeam.fromId(biomeId);
+        if (team.isEmpty()) {
+            CommandHelpers.fail(src, "Unknown biome: " + biomeId);
+            return 0;
+        }
+        MatchManager match = MatchManager.get();
+        if (!match.isActive()) {
+            CommandHelpers.fail(src, "No match is running.");
+            return 0;
+        }
+        BiomeTeam winner = team.get();
+        Component msg = Component.literal("Match over — " + winner.displayName() + " wins!")
+                .withStyle(winner.color(), ChatFormatting.BOLD);
+        for (ServerPlayer p : src.getServer().getPlayerList().getPlayers()) {
+            p.sendSystemMessage(msg);
+        }
+        match.abort();
+        CommandHelpers.ok(src, "Match ended — " + winner.displayName() + " declared winner.");
+        return 1;
+    }
+
     private static int setTeam(CommandSourceStack src, ServerPlayer target, String biomeId) {
         Optional<BiomeTeam> team = BiomeTeam.fromId(biomeId);
         if (team.isEmpty()) {
             CommandHelpers.fail(src, "Unknown biome: " + biomeId);
             return 0;
         }
+        MatchManager match = MatchManager.get();
         MatchPlayerState state = TeamAssignments.get().state(target.getUUID());
         if (state == null) {
-            CommandHelpers.fail(src, target.getGameProfile().getName() + " is not in the current match.");
-            return 0;
+            if (!match.isActive()) {
+                CommandHelpers.fail(src, target.getGameProfile().getName() + " is not in the current match.");
+                return 0;
+            }
+            // Auto-join: doubles as the join path for a second tester.
+            match.addMatchPlayer(target.getUUID());
+            TeamAssignments.get().join(target.getUUID());
+            state = TeamAssignments.get().state(target.getUUID());
         }
+
         if (state.team != null) TeamPassives.clear(target, state.team);
         state.team = team.get();
         state.biomeClass = null;
         TeamPassives.apply(target, team.get());
-        CommandHelpers.ok(src, target.getGameProfile().getName() + " → " + team.get().displayName());
+        LobbyFlow.teleportToTeamSpawn(target, team.get());
+        LobbyFlow.openClassPicker(target, team.get());
+
+        CommandHelpers.ok(src, target.getGameProfile().getName() + " → " + team.get().displayName()
+                + " (teleported; pick a class)");
         return 1;
     }
 
