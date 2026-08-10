@@ -44,10 +44,10 @@ An unfueled furnace now kills a full-health Nether player in 20 seconds, and it 
 In `lifeline/PlainsQuota.onPhaseChange`, on the quota-met branch, every non-spectator Plains player receives:
 
 ```java
-new MobEffectInstance(MobEffects.RESISTANCE, 18000, 0, true, false, true)
+new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 18000, 0, true, false, true)
 ```
 
-The constant is `MobEffects.RESISTANCE` — verified against the 1.21.11 mapped jar. It is **not** `DAMAGE_RESISTANCE`.
+The constant is `MobEffects.DAMAGE_RESISTANCE` — this branch targets Minecraft 1.21.1 (see gradle.properties), where the constant still carries the older name. It was renamed to `RESISTANCE` in later versions.
 
 18000 ticks is exactly `Timeline.PHASE_TICKS`, so the buff expires precisely as the next quota check arrives. Reapplied fresh each time quota is met; a team that keeps paying keeps the buff continuously.
 
@@ -78,7 +78,7 @@ Add `KitGrant.switchClass(ServerPlayer player, BiomeClass from, BiomeClass to)`:
 
 Unnamed kit items — generic wooden tools, plain leather armor — are deliberately **not** stripped. They are fungible and low value, and accumulating a spare wooden pickaxe is not a balance problem. The exploit that matters is holding several classes' *ability* items at once (wand plus Frenzy plus Tidebringer), and every one of those carries a custom name.
 
-`ClassKits.KITS` is private; add a public accessor returning the kit list for a `BiomeClass`.
+`ClassKits.kit(BiomeClass)` already exists and is public — no accessor needs adding.
 
 `KitGrant.grant()` is unchanged and still used for class pick, respawn, and the debug command.
 
@@ -128,7 +128,7 @@ Rift Walker's alpha strike is neutralised as intended — a squad inserted durin
 | File | Change |
 | --- | --- |
 | `lifeline/FurnaceLifeline.java` | interval 600 → 40, delete floor and clamp, wire `onLit()` |
-| `lifeline/PlainsQuota.java` | grant `MobEffects.RESISTANCE` for 18000 ticks on quota met |
+| `lifeline/PlainsQuota.java` | grant `MobEffects.DAMAGE_RESISTANCE` for 18000 ticks on quota met |
 | `command/NationsCommand.java` | add `class` subcommand |
 | `classes/KitGrant.java` | add `switchClass(player, from, to)` |
 | `classes/ClassKits.java` | add public kit accessor |

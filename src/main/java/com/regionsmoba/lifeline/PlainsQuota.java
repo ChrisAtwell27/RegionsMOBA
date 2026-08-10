@@ -11,6 +11,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 
 import java.util.UUID;
 
@@ -20,6 +22,13 @@ import java.util.UUID;
  * mirroring the Mountain Blood Tribute penalty.
  */
 public final class PlainsQuota {
+
+    /**
+     * Resistance I duration for meeting quota — one full phase (18000 ticks), so
+     * the buff expires exactly as the next quota check lands. Meeting quota every
+     * season therefore keeps it up continuously.
+     */
+    public static final int QUOTA_REWARD_TICKS = 18000;
 
     private PlainsQuota() {}
 
@@ -80,8 +89,11 @@ public final class PlainsQuota {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null) continue;
             if (met) {
+                p.addEffect(new MobEffectInstance(
+                        MobEffects.DAMAGE_RESISTANCE, QUOTA_REWARD_TICKS, 0, true, false, true));
                 p.sendSystemMessage(Component.literal(
-                                "Emerald Quota met — " + paid + " / " + quota + ".")
+                                "Emerald Quota met — " + paid + " / " + quota
+                                        + ". Resistance I for 15 minutes.")
                         .withStyle(ChatFormatting.GREEN));
             } else {
                 Lives.loseLife(p, "Emerald Quota unmet");

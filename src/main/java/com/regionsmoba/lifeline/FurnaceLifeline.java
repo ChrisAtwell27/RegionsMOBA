@@ -38,14 +38,13 @@ import java.util.UUID;
  *
  * tick() is called every server tick from the entrypoint:
  *   - Burns extra fuel (2x rate) when cold and the furnace is lit.
- *   - Every 30s when unlit: applies Weakness + 1 heart damage to every Nether
+ *   - Every 2s when unlit: applies Weakness + 1 heart damage to every Nether
  *     player, with a damage floor of 1 heart (2 HP).
  */
 public final class FurnaceLifeline {
 
-    public static final int DAMAGE_INTERVAL_TICKS = 30 * 20;
-    public static final float DAMAGE_AMOUNT = 2.0f;        // 1 heart
-    public static final float DAMAGE_FLOOR_HP = 2.0f;       // never below 1 heart
+    public static final int DAMAGE_INTERVAL_TICKS = 2 * 20;
+    public static final float DAMAGE_AMOUNT = 2.0f;        // 1 heart, unfloored — this kills
     public static final int WEAKNESS_DURATION_TICKS = 60 * 20; // refresh once per minute
 
     private static final Holder<MobEffect> WEAKNESS = MobEffects.WEAKNESS;
@@ -63,6 +62,10 @@ public final class FurnaceLifeline {
         boolean lit = state.hasProperty(BlockStateProperties.LIT) && state.getValue(BlockStateProperties.LIT);
 
         if (lit) {
+            // Hold the damage timer disarmed for as long as the furnace burns, so
+            // the moment it goes out the team gets a full fresh interval rather
+            // than an immediate hit. Cheaper than tracking the unlit->lit edge.
+            onLit();
             applyColdBurnRate(level, pos);
         } else {
             applyUnlitPenalty(server, level, pos, globalTick);
@@ -79,7 +82,11 @@ public final class FurnaceLifeline {
         if (remaining > 0) acc.regionsmoba$setLitTimeRemaining(remaining - 1);
     }
 
-    /** Furnace out: every 30s, apply Weakness + 1 heart to every Nether player (capped at 1 heart floor). */
+    /**
+     * Furnace out: every 2s, apply Weakness + 1 heart to every Nether player.
+     * There is no damage floor — a furnace left unfed kills the whole team in
+     * roughly 20 seconds.
+     */
     private static void applyUnlitPenalty(MinecraftServer server, ServerLevel level, BlockPos pos, long globalTick) {
         LifelineState ls = LifelineState.get();
         if (ls.lastFurnaceDamageTick < 0) {
@@ -88,6 +95,8 @@ public final class FurnaceLifeline {
         }
         if (globalTick - ls.lastFurnaceDamageTick < DAMAGE_INTERVAL_TICKS) return;
         ls.lastFurnaceDamageTick = globalTick;
+        // Stateless throttle for the warning text: every fifth damage tick.
+        boolean warnThisTick = (globalTick / DAMAGE_INTERVAL_TICKS) % 5 == 0;
 
         for (UUID id : MatchManager.get().matchPlayers()) {
             MatchPlayerState s = TeamAssignments.get().state(id);
@@ -97,13 +106,15 @@ public final class FurnaceLifeline {
             // Refresh Weakness so it persists while the furnace stays out.
             p.addEffect(new MobEffectInstance(
                     WEAKNESS, WEAKNESS_DURATION_TICKS, 0, true, false, true));
-            // Apply damage capped at the 1-heart floor.
-            float headroom = p.getHealth() - DAMAGE_FLOOR_HP;
-            if (headroom <= 0) continue;
-            float dmg = Math.min(DAMAGE_AMOUNT, headroom);
-            p.hurt(level.damageSources().wither(), dmg);
-            p.sendSystemMessage(Component.literal("The furnace is out — your strength fades.")
-                    .withStyle(ChatFormatting.RED));
+            // No floor: an unfed furnace kills. wither() is deliberate — it
+            // bypasses the Nether team's permanent Fire Resistance passive.
+            p.hurt(level.damageSources().wither(), DAMAGE_AMOUNT);
+            // At a 2s interval a per-tick message would be 30 lines a minute, so
+            // warn every fifth tick (10s) — about two warnings before death.
+            if (warnThisTick) {
+                p.sendSystemMessage(Component.literal("The furnace is out — you are dying.")
+                        .withStyle(ChatFormatting.RED));
+            }
         }
     }
 

@@ -6,15 +6,15 @@
 
 **Architecture:** Three of the four changes are small edits to existing files. The fourth adds a `Retaliation` store — deliberately free of Minecraft types so its window logic is unit-testable — consumed by new rules inside `PvpManager.isPvpAllowedFor`, which is already the single chokepoint every PvP damage path flows through.
 
-**Tech Stack:** Java 21, Fabric Loader 0.19.2, Fabric API 0.141.3+1.21.11, Minecraft 1.21.11, official Mojang mappings, JUnit 5.
+**Tech Stack:** Java 21, Fabric Loader 0.19.3, Fabric API 0.116.15+1.21.1, Minecraft 1.21.1, official Mojang mappings, JUnit 5.
 
 **Spec:** `docs/superpowers/specs/2026-08-10-territorial-pvp-and-balance-pass-design.md`
 
 ## Global Constraints
 
 - Server-side only. Never import `net.minecraft.client.*`. No registry entries, no custom payload packets.
-- Java 21, Minecraft 1.21.11, official Mojang mappings.
-- The Resistance effect constant is `MobEffects.RESISTANCE` — **not** `DAMAGE_RESISTANCE`. Verified against the mapped jar.
+- Java 21, Minecraft 1.21.1, official Mojang mappings.
+- This branch targets **Minecraft 1.21.1**, not 1.21.11 — check `gradle.properties`. The Resistance constant is `MobEffects.DAMAGE_RESISTANCE`, and damage is `p.hurt(source, amount)` not `hurtServer`.
 - `ClassKits.kit(BiomeClass)` already exists and is public. Do NOT add an accessor; the spec is wrong on that point.
 - Furnace damage must stay on `damageSources().wither()` — it deliberately bypasses the Nether team's permanent Fire Resistance.
 - Territorial PvP **layers on top of** the phase rules. Global PvP during cold seasons still wins, so home-field advantage is a warm-phase phenomenon.
@@ -55,13 +55,13 @@ In `applyUnlitPenalty`, replace:
             float headroom = p.getHealth() - DAMAGE_FLOOR_HP;
             if (headroom <= 0) continue;
             float dmg = Math.min(DAMAGE_AMOUNT, headroom);
-            p.hurtServer(level, level.damageSources().wither(), dmg);
+            p.hurt(level.damageSources().wither(), dmg);
 ```
 
 with:
 
 ```java
-            p.hurtServer(level, level.damageSources().wither(), DAMAGE_AMOUNT);
+            p.hurt(level.damageSources().wither(), DAMAGE_AMOUNT);
 ```
 
 An unfueled furnace now kills a full-health player in 20 seconds.
@@ -129,14 +129,14 @@ Replace with:
 ```java
             if (met) {
                 p.addEffect(new MobEffectInstance(
-                        MobEffects.RESISTANCE, QUOTA_REWARD_TICKS, 0, true, false, true));
+                        MobEffects.DAMAGE_RESISTANCE, QUOTA_REWARD_TICKS, 0, true, false, true));
                 p.sendSystemMessage(Component.literal(
                                 "Emerald Quota met — " + paid + " / " + quota
                                         + ". Resistance I for 15 minutes.")
                         .withStyle(ChatFormatting.GREEN));
 ```
 
-Add imports `net.minecraft.world.effect.MobEffectInstance` and `net.minecraft.world.effect.MobEffects` if absent. The constant is `MobEffects.RESISTANCE`.
+Add imports `net.minecraft.world.effect.MobEffectInstance` and `net.minecraft.world.effect.MobEffects` if absent. The constant is `MobEffects.DAMAGE_RESISTANCE` on 1.21.1.
 
 - [ ] **Step 3: Build and commit**
 
