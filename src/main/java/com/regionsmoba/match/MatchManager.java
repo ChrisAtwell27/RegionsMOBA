@@ -171,6 +171,7 @@ public final class MatchManager {
         TeamAssignments.get().reset(matchPlayers);
         LifelineState.get().resetAll();
         com.regionsmoba.debug.TestMode.clear();
+        com.regionsmoba.pvp.Retaliation.clearAll();
         LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
@@ -309,6 +310,7 @@ public final class MatchManager {
         TeamAssignments.get().clearAll();
         LifelineState.get().resetAll();
         com.regionsmoba.debug.TestMode.clear();
+        com.regionsmoba.pvp.Retaliation.clearAll();
         LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
@@ -370,6 +372,7 @@ public final class MatchManager {
         TeamAssignments.get().clearAll();
         LifelineState.get().resetAll();
         com.regionsmoba.debug.TestMode.clear();
+        com.regionsmoba.pvp.Retaliation.clearAll();
         LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
