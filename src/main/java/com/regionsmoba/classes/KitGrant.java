@@ -15,10 +15,14 @@ import com.regionsmoba.classes.impl.TinkererAbility;
 import com.regionsmoba.classes.impl.WarriorAbility;
 import com.regionsmoba.classes.impl.WizardAbility;
 import com.regionsmoba.team.BiomeClass;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,14 +41,77 @@ public final class KitGrant {
 
     private KitGrant() {}
 
+    /**
+     * Swaps a player's class in place, mid-match.
+     *
+     * Unlike {@link #grant}, the inventory is NOT wiped — only the previous
+     * class's <em>named</em> kit items are removed. Unnamed kit items (generic
+     * tools, plain armor) are left alone: they are fungible, and a spare wooden
+     * pickaxe is not a balance problem. Every ability item carries a custom
+     * name, so stripping those is enough to stop a player accumulating several
+     * classes' abilities at once.
+     *
+     * Wiping the inventory here instead would delete everything the player had
+     * earned, and nobody would ever use the feature.
+     */
+    public static void switchClass(ServerPlayer player, BiomeClass from, BiomeClass to) {
+        if (from != null) stripNamedKitItems(player, from);
+        resetAbilityState(player);
+        DamageModifiers.apply(player, to);
+        BerserkerAbility.applyStack(player, to);
+        giveKit(player, to);
+    }
+
+    /** Removes every inventory or armor stack whose custom name belongs to this kit. */
+    private static void stripNamedKitItems(ServerPlayer player, BiomeClass biomeClass) {
+        List<String> names = new ArrayList<>();
+        for (ItemStack template : ClassKits.kit(biomeClass)) {
+            Component name = template.get(DataComponents.CUSTOM_NAME);
+            if (name != null) names.add(name.getString());
+        }
+        if (names.isEmpty()) return;
+
+        Inventory inv = player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (matchesAnyName(inv.getItem(i), names)) inv.setItem(i, ItemStack.EMPTY);
+        }
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (!slot.isArmor()) continue;
+            if (matchesAnyName(player.getItemBySlot(slot), names)) {
+                player.setItemSlot(slot, ItemStack.EMPTY);
+            }
+        }
+    }
+
+    private static boolean matchesAnyName(ItemStack stack, List<String> names) {
+        if (stack.isEmpty()) return false;
+        for (String name : names) {
+            if (ItemTags.hasName(stack, name)) return true;
+        }
+        return false;
+    }
+
     public static void grant(ServerPlayer player, BiomeClass biomeClass) {
         player.getInventory().clearContent();
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.isArmor()) player.setItemSlot(slot, ItemStack.EMPTY);
         }
 
-        // A kit grant is also a state reset: cooldowns and any in-flight ability
-        // effects belong to the previous life / previous class.
+        resetAbilityState(player);
+        DamageModifiers.apply(player, biomeClass);
+        // Berserker hearts are the exception: the banked pool survives class
+        // changes and deaths, so applyStack re-applies it (or strips the max-HP
+        // modifier when the player is no longer a Berserker) rather than resetting.
+        BerserkerAbility.applyStack(player, biomeClass);
+        giveKit(player, biomeClass);
+    }
+
+    /**
+     * Drops cooldowns and every in-flight ability effect. Shared by {@link #grant}
+     * and {@link #switchClass} — a Warrior's running Frenzy must not survive onto
+     * a Wizard.
+     */
+    private static void resetAbilityState(ServerPlayer player) {
         Cooldowns.get().clearForPlayer(player.getUUID());
         WarriorAbility.clearForPlayer(player.getUUID());
         MinerAbility.clearForPlayer(player.getUUID());
@@ -63,12 +130,10 @@ public final class KitGrant {
         // player is carrying, not one they cast.
         BloodmageAbility.clearCurse(player);
         LumberjackAbility.clearForPlayer(player.getUUID());
-        DamageModifiers.apply(player, biomeClass);
-        // Berserker hearts are the exception: the banked pool survives class
-        // changes and deaths, so applyStack re-applies it (or strips the max-HP
-        // modifier when the player is no longer a Berserker) rather than resetting.
-        BerserkerAbility.applyStack(player, biomeClass);
+    }
 
+    /** Issues a class kit. Templates in {@link ClassKits} are shared, so each is copied. */
+    private static void giveKit(ServerPlayer player, BiomeClass biomeClass) {
         List<ItemStack> kit = ClassKits.kit(biomeClass);
         for (ItemStack template : kit) {
             ItemStack copy = template.copy();

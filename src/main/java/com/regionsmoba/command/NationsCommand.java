@@ -2,8 +2,14 @@ package com.regionsmoba.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.regionsmoba.config.Area;
+import com.regionsmoba.config.RegionsConfig;
+import com.regionsmoba.lobby.LobbyFlow;
 import com.regionsmoba.lobby.NationsSignHandler;
 import com.regionsmoba.lobby.NationsSignState;
+import com.regionsmoba.match.MatchManager;
+import com.regionsmoba.team.MatchPlayerState;
+import com.regionsmoba.team.TeamAssignments;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -32,7 +38,8 @@ public final class NationsCommand {
     private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal(ROOT)
                 .then(Commands.literal("join").executes(ctx -> join(ctx.getSource())))
-                .then(Commands.literal("leave").executes(ctx -> leave(ctx.getSource()))));
+                .then(Commands.literal("leave").executes(ctx -> leave(ctx.getSource())))
+                .then(Commands.literal("class").executes(ctx -> changeClass(ctx.getSource()))));
     }
 
     private static int join(CommandSourceStack src) throws CommandSyntaxException {
@@ -70,6 +77,42 @@ public final class NationsCommand {
             return 0;
         }
         CommandHelpers.ok(src, "Left the queue (" + state.joiners.size() + " / " + state.minPlayers + ")");
+        return 1;
+    }
+
+    /**
+     * Mid-match class change. Restricted to your own region: walking home is the
+     * cost, which is why there is no cooldown. Switching preserves earned gear —
+     * see {@link com.regionsmoba.classes.KitGrant#switchClass}.
+     */
+    private static int changeClass(CommandSourceStack src) throws CommandSyntaxException {
+        ServerPlayer player = src.getPlayerOrException();
+
+        if (!MatchManager.get().isActive()) {
+            CommandHelpers.fail(src, "No match is running.");
+            return 0;
+        }
+        MatchPlayerState state = TeamAssignments.get().state(player.getUUID());
+        if (state == null || state.team == null) {
+            CommandHelpers.fail(src, "You have no team yet.");
+            return 0;
+        }
+        if (state.spectator) {
+            CommandHelpers.fail(src, "Spectators cannot change class.");
+            return 0;
+        }
+
+        Area home = RegionsConfig.get().biomeBounds(state.team);
+        String dimension = player.level().dimension().location().toString();
+        boolean atHome = home != null && home.isComplete()
+                && home.dimension().equals(dimension)
+                && home.contains(player.getX(), player.getY(), player.getZ());
+        if (!atHome) {
+            CommandHelpers.warn(src, "You must be inside your own region to change class.");
+            return 0;
+        }
+
+        LobbyFlow.openClassPicker(player, state.team);
         return 1;
     }
 

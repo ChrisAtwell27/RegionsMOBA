@@ -111,6 +111,10 @@ public final class LobbyFlow {
 
     public static void onClassPicked(Player player, BiomeClass biomeClass) {
         if (!(player instanceof ServerPlayer sp)) return;
+        // Captured before assignClass, which overwrites it.
+        MatchPlayerState state = TeamAssignments.get().state(sp.getUUID());
+        BiomeClass previous = state == null ? null : state.biomeClass;
+
         boolean ok = TeamAssignments.get().assignClass(sp.getUUID(), biomeClass);
         sp.closeContainer();
         if (!ok) {
@@ -118,7 +122,15 @@ public final class LobbyFlow {
             return;
         }
         tell(sp, "Class: " + biomeClass.displayName() + ".", biomeClass.team().color());
-        KitGrant.grant(sp, biomeClass);
+
+        if (previous == null) {
+            // First pick of the match: a full grant onto a clean inventory.
+            KitGrant.grant(sp, biomeClass);
+        } else {
+            // Mid-match switch: keep everything the player earned, strip only the
+            // old class's named ability items.
+            KitGrant.switchClass(sp, previous, biomeClass);
+        }
     }
 
     // ---- Helpers ----
