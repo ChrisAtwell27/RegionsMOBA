@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.phys.Vec3;
 
@@ -78,7 +78,7 @@ public final class BonusDamageHook {
 
         reentry.set(Boolean.TRUE);
         try {
-            victim.hurtServer(level, source, bonus);
+            victim.hurt(source, bonus);
         } finally {
             reentry.set(Boolean.FALSE);
         }

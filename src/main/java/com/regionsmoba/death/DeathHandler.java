@@ -23,7 +23,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.Set;
@@ -63,6 +63,8 @@ public final class DeathHandler {
             // applies whatever class the player died on — the pool belongs to the
             // player, not the current class, per mountain-classes.md.
             BerserkerAbility.onPlayerDeath(victim);
+            // A completed portal pair survives death; a lone first block does not.
+            com.regionsmoba.classes.impl.TransporterAbility.onOwnerDeath(victim);
 
             if (state.team == BiomeTeam.OCEAN && LifelineState.get().oceanPermadeath) {
                 Lives.enterSpectator(victim, state, "Conduit destroyed — final death");
@@ -133,8 +135,8 @@ public final class DeathHandler {
         ServerLevel level = server.getLevel(lobby.dimensionKey());
         if (level == null) return;
         player.teleportTo(level, lobby.x() + 0.5, lobby.y(), lobby.z() + 0.5,
-                Set.<Relative>of(), player.getYRot(), player.getXRot(), true);
+                Set.<RelativeMovement>of(), player.getYRot(), player.getXRot());
         RegionsMOBA.LOGGER.debug("Teleported spectator {} to lobby spawn",
-                player.getGameProfile().name());
+                player.getGameProfile().getName());
     }
 }

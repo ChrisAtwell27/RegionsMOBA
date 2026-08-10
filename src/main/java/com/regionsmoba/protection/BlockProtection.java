@@ -51,7 +51,7 @@ public final class BlockProtection {
             if (!MatchManager.get().isActive()) return true;
             if (!(player instanceof ServerPlayer sp)) return true;
             if (BuildMode.isEnabled(sp.getUUID())) return true;
-            String dim = world.dimension().identifier().toString();
+            String dim = world.dimension().location().toString();
 
             // Trial chamber: blanket block-break ban, NO deposit exception.
             if (insideChamber(pos, dim)) {
@@ -86,7 +86,7 @@ public final class BlockProtection {
 
         ItemStack held = sp.getMainHandItem();
         BlockPos clicked = hit.getBlockPos();
-        String dim = world.dimension().identifier().toString();
+        String dim = world.dimension().location().toString();
 
         // Block-entity interaction protection: if the clicked block has a BE and
         // sits inside a protected area, deny — chest/hopper/dispenser/etc. can't

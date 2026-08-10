@@ -7,18 +7,27 @@ import com.regionsmoba.pvp.PvpManager;
 import com.regionsmoba.team.MatchPlayerState;
 import com.regionsmoba.team.TeamAssignments;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * Plains Farmer — Feast (team food refill) + Famine (enemy hunger drain).
@@ -29,9 +38,13 @@ import java.util.List;
  *   Famine — right-click dead bush. 90s cd. Hunger XX (amplifier 19) for 30s on
  *            every enemy within 13 blocks. PVP-gated.
  *
- * Harvest passive (instant crop regrow + chance drops) and Food Synergy
- * (extra heal on eat) are deferred — they need block-break / eat hooks
- * not yet wired.
+ * Harvest passive: crops the Farmer breaks regrow instantly at full age, which
+ * is what lets the Farmer bypass the Cold Season crop-freeze. Breaking crops
+ * also rolls a 1/100 bonus item and a 1/400 apple, and tall grass rolls its own
+ * small drop table.
+ *
+ * Food Synergy (extra heal on eat) is still deferred — it needs an eat hook that
+ * is not wired yet.
  */
 public final class FarmerAbility {
 
@@ -110,6 +123,50 @@ public final class FarmerAbility {
         Cooldowns.get().set(farmer, "farmer:famine", FAMINE_COOLDOWN_SECONDS);
         tell(farmer, "Famine — drained " + nearby.size() + " enemy(ies)", ChatFormatting.DARK_GREEN);
         return true;
+    }
+
+    // ---- Harvest passive ----
+
+    /** 1/100 per crop break. */
+    public static final int RARE_DROP_DENOMINATOR = 100;
+    /** 1/400 per crop break. */
+    public static final int APPLE_DENOMINATOR = 400;
+
+    private static final List<Item> RARE_CROP_DROPS = List.of(
+            Items.RAW_GOLD, Items.RAW_IRON, Items.COAL, Items.BOOK,
+            Items.EXPERIENCE_BOTTLE, Items.GOLD_NUGGET, Items.IRON_HOE);
+
+    private static final List<Item> GRASS_DROPS = List.of(
+            Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.MELON_SEEDS, Items.PUMPKIN_SEEDS);
+
+    private static final Random RNG = new Random();
+
+    /**
+     * Harvest passive. Called from the block-break hook after vanilla has taken
+     * its own drops.
+     *
+     * The instant regrow is the important half: it puts the crop straight back
+     * at full age, which is what lets a Farmer keep harvesting through the Cold
+     * Season crop-freeze that {@link com.regionsmoba.mixin.CropGrowthMixin}
+     * otherwise enforces.
+     */
+    public static void onBlockBroken(ServerLevel level, ServerPlayer farmer, BlockPos pos, BlockState state) {
+        if (state.getBlock() instanceof CropBlock crop) {
+            level.setBlock(pos, crop.getStateForAge(crop.getMaxAge()), Block.UPDATE_ALL);
+            if (RNG.nextInt(RARE_DROP_DENOMINATOR) == 0) {
+                Item drop = RARE_CROP_DROPS.get(RNG.nextInt(RARE_CROP_DROPS.size()));
+                Block.popResource(level, pos, new ItemStack(drop));
+            }
+            if (RNG.nextInt(APPLE_DENOMINATOR) == 0) {
+                Block.popResource(level, pos, new ItemStack(Items.APPLE));
+            }
+            return;
+        }
+        if (state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS)) {
+            if (RNG.nextInt(4) != 0) return;
+            Item drop = GRASS_DROPS.get(RNG.nextInt(GRASS_DROPS.size()));
+            Block.popResource(level, pos, new ItemStack(drop));
+        }
     }
 
     private static void tell(ServerPlayer p, String msg, ChatFormatting color) {

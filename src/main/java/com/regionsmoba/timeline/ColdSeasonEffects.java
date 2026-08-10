@@ -23,7 +23,7 @@ public final class ColdSeasonEffects {
     public static final int APPLY_INTERVAL_TICKS = 20;
     public static final int EFFECT_DURATION_TICKS = 40;
 
-    private static final Holder<MobEffect> SLOWNESS = MobEffects.SLOWNESS;
+    private static final Holder<MobEffect> SLOWNESS = MobEffects.MOVEMENT_SLOWDOWN;
 
     private ColdSeasonEffects() {}
 

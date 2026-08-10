@@ -1,6 +1,15 @@
 # Commands
 
-All commands are operator-only. Exact argument syntax is finalized in the implementation spec.
+Everything under `/regions` is operator-only. `/nations` is open to every player.
+
+## Player commands
+
+| Command | Effect |
+| --- | --- |
+| `/nations join` | Queue at the fullest open `[Nations]` lobby. Moves you if you were queued elsewhere. |
+| `/nations leave` | Leave whatever queue you're in |
+
+"Fullest" is the highest joiner count. Ties break toward the board that needs the fewest more players, then by position so repeated calls pick the same board. Lobbies whose dimension isn't loaded are skipped; boards whose sign is gone or has lost its `[Nations]` header are dropped from the registry as they're found.
 
 ## Area commands
 

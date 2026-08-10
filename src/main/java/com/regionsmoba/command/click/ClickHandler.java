@@ -14,7 +14,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -227,13 +227,13 @@ public final class ClickHandler {
             PendingRegistrationStore.clear(sp.getUUID());
             return InteractionResult.SUCCESS;
         }
-        BlockPosData pos = BlockPosData.of(sp.level(), entity.blockPosition());
+        BlockPosData pos = BlockPosData.of(sp.serverLevel(), entity.blockPosition());
         RegionsConfig.get().traders.put(
                 reg.team.id(),
                 new TraderRef(entity.getUUID(), pos));
         RegionsConfig.save();
         PendingRegistrationStore.clear(sp.getUUID());
-        Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
         feedback(sp, reg.team.displayName() + " trader registered: " + entityId + " at (" + pos + ")",
                 ChatFormatting.GREEN);
         return InteractionResult.SUCCESS;
@@ -263,7 +263,7 @@ public final class ClickHandler {
     }
 
     private static String blockId(BlockState state) {
-        Identifier id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         return id.toString();
     }
 

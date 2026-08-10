@@ -8,8 +8,8 @@ import com.regionsmoba.team.BiomeTeam;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 
 import java.util.Map;
 
@@ -33,7 +33,7 @@ public final class OceanMassEvent {
         for (BlockPosData pos : spawns.values()) {
             ServerLevel level = server.getLevel(pos.dimensionKey());
             if (level == null) continue;
-            Entity e = EntityType.ELDER_GUARDIAN.spawn(level, pos.toBlockPos(), EntitySpawnReason.EVENT);
+            Entity e = EntityType.ELDER_GUARDIAN.spawn(level, pos.toBlockPos(), MobSpawnType.EVENT);
             if (e == null) continue;
             ModEntities.track(e);
             MassEventTargeting.get().tag(e, BiomeTeam.OCEAN);

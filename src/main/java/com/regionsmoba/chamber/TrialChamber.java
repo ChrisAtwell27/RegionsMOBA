@@ -19,9 +19,9 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -62,8 +62,8 @@ public final class TrialChamber {
         return INSTANCE;
     }
 
-    private static final Holder<MobEffect> STRENGTH = MobEffects.STRENGTH;
-    private static final Holder<MobEffect> SPEED = MobEffects.SPEED;
+    private static final Holder<MobEffect> STRENGTH = MobEffects.DAMAGE_BOOST;
+    private static final Holder<MobEffect> SPEED = MobEffects.MOVEMENT_SPEED;
 
     private boolean cadenceEnabled = true;
     private boolean waveActive;
@@ -141,7 +141,7 @@ public final class TrialChamber {
             ServerLevel spawnLevel = server.getLevel(spawn.dimensionKey());
             if (spawnLevel == null) continue;
             for (int i = 0; i < MOBS_PER_SPAWN; i++) {
-                Entity e = EntityType.ZOMBIE.spawn(spawnLevel, spawn.toBlockPos(), EntitySpawnReason.SPAWNER);
+                Entity e = EntityType.ZOMBIE.spawn(spawnLevel, spawn.toBlockPos(), MobSpawnType.SPAWNER);
                 if (e == null) continue;
                 ModEntities.track(e);
                 waveMobs.add(e.getUUID());
@@ -194,7 +194,7 @@ public final class TrialChamber {
         if (chamber == null || !chamber.isComplete()) return;
         ServerLevel level = server.getLevel(net.minecraft.resources.ResourceKey.create(
                 net.minecraft.core.registries.Registries.DIMENSION,
-                net.minecraft.resources.Identifier.parse(chamber.dimension())));
+                net.minecraft.resources.ResourceLocation.parse(chamber.dimension())));
         if (level == null) return;
         Random rng = new Random();
         for (int n = 0; n < winners.size(); n++) {

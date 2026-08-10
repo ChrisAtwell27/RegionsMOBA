@@ -50,14 +50,14 @@ public final class OceanWaterFreeze {
             if (s == null || s.team != BiomeTeam.OCEAN) continue;
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null) continue;
-            if (!oceanBounds.dimension().equals(p.level().dimension().identifier().toString())) continue;
+            if (!oceanBounds.dimension().equals(p.level().dimension().location().toString())) continue;
             if (!oceanBounds.contains(p.blockPosition())) continue;
             freezeAround(p, oceanBounds);
         }
     }
 
     private static void freezeAround(ServerPlayer player, Area bounds) {
-        ServerLevel level = player.level();
+        ServerLevel level = player.serverLevel();
         BlockPos centre = player.blockPosition();
         int minX = Math.max(centre.getX() - RADIUS_HORIZONTAL, bounds.low().x());
         int maxX = Math.min(centre.getX() + RADIUS_HORIZONTAL, bounds.high().x());

@@ -50,7 +50,7 @@ public final class Lives {
         player.setGameMode(GameType.SPECTATOR);
         player.sendSystemMessage(Component.literal("Spectator: " + reason)
                 .withStyle(ChatFormatting.GRAY));
-        RegionsMOBA.LOGGER.info("{} → spectator ({})", player.getGameProfile().name(), reason);
+        RegionsMOBA.LOGGER.info("{} → spectator ({})", player.getGameProfile().getName(), reason);
         if (firstTransition && state.team != null) {
             PermanentLossTracker.get().recordPermanentLoss(state.team, player.level().getServer());
         }

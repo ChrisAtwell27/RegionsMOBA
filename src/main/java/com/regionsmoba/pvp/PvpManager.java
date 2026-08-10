@@ -55,7 +55,7 @@ public final class PvpManager {
         Area chamber = RegionsConfig.get().chamberBounds;
         if (chamber == null || !chamber.isComplete()) return false;
         // Chamber is a single dimension; compare the entity's dimension against the chamber's.
-        if (!entity.level().dimension().identifier().toString().equals(chamber.dimension())) return false;
+        if (!entity.level().dimension().location().toString().equals(chamber.dimension())) return false;
         return chamber.contains(entity.getX(), entity.getY(), entity.getZ());
     }
 }

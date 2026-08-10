@@ -116,7 +116,7 @@ public final class BloodTributeLifeline {
         if (attacker != null) {
             MatchPlayerState attackerState = TeamAssignments.get().state(attacker.getUUID());
             if (attackerState != null && attackerState.team == BiomeTeam.MOUNTAIN) {
-                satisfy("kill by " + attacker.getGameProfile().name());
+                satisfy("kill by " + attacker.getGameProfile().getName());
                 return;
             }
         }
@@ -124,7 +124,7 @@ public final class BloodTributeLifeline {
         // Path 2 — enemy died inside the mountain biome, regardless of cause.
         Area mountainBounds = RegionsConfig.get().biomeBounds(BiomeTeam.MOUNTAIN);
         if (mountainBounds != null && mountainBounds.isComplete()
-                && mountainBounds.dimension().equals(victim.level().dimension().identifier().toString())
+                && mountainBounds.dimension().equals(victim.level().dimension().location().toString())
                 && mountainBounds.contains(victim.getX(), victim.getY(), victim.getZ())) {
             satisfy("death inside mountain biome");
         }

@@ -16,8 +16,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 
 import java.util.Map;
 import java.util.Optional;
@@ -152,10 +152,10 @@ public final class TargetCommands {
             CommandHelpers.fail(src, "spawntrader must be run by a player.");
             return 0;
         }
-        ServerLevel level = player.level();
+        ServerLevel level = player.serverLevel();
         BlockPos pos = CommandHelpers.senderBlockPos(src);
         EntityType<?> type = traderTypeFor(team.get());
-        Entity entity = type.spawn(level, pos, EntitySpawnReason.COMMAND);
+        Entity entity = type.spawn(level, pos, MobSpawnType.COMMAND);
         if (entity == null) {
             CommandHelpers.fail(src, "Failed to spawn " + team.get().displayName() + " trader entity.");
             return 0;

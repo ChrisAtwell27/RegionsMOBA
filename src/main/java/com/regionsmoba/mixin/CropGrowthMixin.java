@@ -40,7 +40,7 @@ public class CropGrowthMixin {
         if (Timeline.get().phase() != MatchPhase.COLD) return;
         Area plains = RegionsConfig.get().biomeBounds(BiomeTeam.PLAINS);
         if (plains == null || !plains.isComplete()) return;
-        if (!plains.dimension().equals(level.dimension().identifier().toString())) return;
+        if (!plains.dimension().equals(level.dimension().location().toString())) return;
         if (!plains.contains(pos)) return;
         if (NetherColdWater.hasHeatNearby(level, pos)) return;
         ci.cancel();

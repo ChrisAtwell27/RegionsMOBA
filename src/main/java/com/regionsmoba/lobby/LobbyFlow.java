@@ -19,8 +19,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -61,17 +62,18 @@ public final class LobbyFlow {
         }
     }
 
-    private static net.minecraft.world.InteractionResult onUseItem(
+    private static InteractionResultHolder<ItemStack> onUseItem(
             Player player, net.minecraft.world.level.Level world, InteractionHand hand) {
-        if (hand != InteractionHand.MAIN_HAND) return net.minecraft.world.InteractionResult.PASS;
-        if (!(player instanceof ServerPlayer sp)) return net.minecraft.world.InteractionResult.PASS;
+        ItemStack held = player.getItemInHand(hand);
+        if (hand != InteractionHand.MAIN_HAND) return InteractionResultHolder.pass(held);
+        if (!(player instanceof ServerPlayer sp)) return InteractionResultHolder.pass(held);
         ItemStack stack = sp.getMainHandItem();
-        if (!isPickerCompass(stack)) return net.minecraft.world.InteractionResult.PASS;
+        if (!isPickerCompass(stack)) return InteractionResultHolder.pass(held);
 
         TeamAssignments ta = TeamAssignments.get();
-        if (!ta.isInMatch(sp.getUUID())) return net.minecraft.world.InteractionResult.PASS;
+        if (!ta.isInMatch(sp.getUUID())) return InteractionResultHolder.pass(held);
         MatchPlayerState state = ta.state(sp.getUUID());
-        if (state == null) return net.minecraft.world.InteractionResult.PASS;
+        if (state == null) return InteractionResultHolder.pass(held);
 
         if (state.team == null) {
             openTeamPicker(sp);
@@ -80,7 +82,7 @@ public final class LobbyFlow {
         } else {
             tell(sp, "You're already in the match as " + state.biomeClass.displayName() + ".", ChatFormatting.GRAY);
         }
-        return net.minecraft.world.InteractionResult.SUCCESS;
+        return net.minecraft.world.InteractionResultHolder.success(sp.getItemInHand(hand));
     }
 
     public static void onTeamPicked(Player player, BiomeTeam team) {
@@ -163,7 +165,7 @@ public final class LobbyFlow {
             return;
         }
         sp.teleportTo(level, spawn.x() + 0.5, spawn.y(), spawn.z() + 0.5,
-                Set.<Relative>of(), sp.getYRot(), sp.getXRot(), true);
+                Set.<RelativeMovement>of(), sp.getYRot(), sp.getXRot());
     }
 
     private static void tell(ServerPlayer p, String msg, ChatFormatting color) {

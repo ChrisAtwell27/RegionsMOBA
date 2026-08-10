@@ -2,24 +2,30 @@ package com.regionsmoba.classes;
 
 import com.regionsmoba.classes.impl.AcrobatAbility;
 import com.regionsmoba.classes.impl.AlchemistAbility;
+import com.regionsmoba.classes.impl.AlchemistCauldron;
 import com.regionsmoba.classes.impl.ArcherAbility;
 import com.regionsmoba.classes.impl.BardAbility;
 import com.regionsmoba.classes.impl.BerserkerAbility;
 import com.regionsmoba.classes.impl.BloodmageAbility;
 import com.regionsmoba.classes.impl.BloodmageTerraform;
 import com.regionsmoba.classes.impl.BuilderAbility;
+import com.regionsmoba.classes.impl.BuilderCache;
 import com.regionsmoba.classes.impl.DefenderAbility;
+import com.regionsmoba.classes.impl.DefenderAlertItem;
 import com.regionsmoba.classes.impl.EnchanterAbility;
 import com.regionsmoba.classes.impl.FarmerAbility;
 import com.regionsmoba.classes.impl.HealerAbility;
 import com.regionsmoba.classes.impl.ImmobilizerAbility;
 import com.regionsmoba.classes.impl.LumberjackAbility;
 import com.regionsmoba.classes.impl.MinerAbility;
+import com.regionsmoba.classes.impl.NeptuneAbility;
 import com.regionsmoba.classes.impl.NeptuneGroundFreeze;
 import com.regionsmoba.classes.impl.RiftWalkerAbility;
 import com.regionsmoba.classes.impl.ScoutAbility;
 import com.regionsmoba.classes.impl.SirenAbility;
+import com.regionsmoba.classes.impl.SpyAbility;
 import com.regionsmoba.classes.impl.TinkererAbility;
+import com.regionsmoba.classes.impl.TransporterAbility;
 import com.regionsmoba.classes.impl.VampireAbility;
 import com.regionsmoba.classes.impl.WarriorAbility;
 import com.regionsmoba.classes.impl.WizardAbility;
@@ -37,9 +43,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -82,7 +90,9 @@ public final class AbilityHooks {
         // nothing — a right-click aimed at a block goes down the UseBlockCallback
         // path below and never reaches here, so both are wired.
         UseItemCallback.EVENT.register((player, level, hand) ->
-                onRightClick(player, level.isClientSide(), hand, null));
+                new InteractionResultHolder<>(
+                        onRightClick(player, level.isClientSide(), hand, null),
+                        player.getItemInHand(hand)));
 
         // Right-click at a block. Claiming the click here also suppresses the
         // block interaction (chest opening, composter placement, …), which is what
@@ -108,14 +118,17 @@ public final class AbilityHooks {
             // Consuming the swing is the point here: the Healer heals teammates
             // instead of hitting them.
             return HealerAbility.tryLeftClickOnTeammate(healer, victim)
-                    ? InteractionResult.SUCCESS_SERVER
+                    ? InteractionResult.SUCCESS
                     : InteractionResult.PASS;
         });
 
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayer player)) return true;
-            if (classOf(player) != BiomeClass.MOUNTAIN_ACROBAT) return true;
-            return !AcrobatAbility.cancelsFallDamage(source);
+            BiomeClass bc = classOf(player);
+            if (bc == BiomeClass.MOUNTAIN_ACROBAT) return !AcrobatAbility.cancelsFallDamage(source);
+            // The Enchanter's XP pool soaks damage below 7 HP until it runs dry.
+            if (bc == BiomeClass.NETHER_ENCHANTER) return !EnchanterAbility.absorbWithExperience(player, amount);
+            return true;
         });
 
         ServerLivingEntityEvents.AFTER_DAMAGE.register(
@@ -133,7 +146,8 @@ public final class AbilityHooks {
             if (!MatchManager.get().isActive()) return true;
             if (!(world instanceof ServerLevel level)) return true;
             if (!(player instanceof ServerPlayer serverPlayer)) return true;
-            return BardAbility.allowBreak(serverPlayer, level, pos);
+            return BardAbility.allowBreak(serverPlayer, level, pos)
+                    && TransporterAbility.allowBreak(serverPlayer, level, pos);
         });
 
         // Post-break bonus drops. Runs alongside DepositBreakHook's AFTER
@@ -147,12 +161,17 @@ public final class AbilityHooks {
             // Ownership bookkeeping runs for any breaker, not just the owner's class.
             BardAbility.onBroken(serverPlayer, level, pos);
             TinkererAbility.onBroken(serverPlayer, level, pos);
+            BuilderCache.onBroken(serverPlayer, level, pos);
+            TransporterAbility.onBroken(serverPlayer, level, pos);
 
             BiomeClass bc = classOf(serverPlayer);
             if (bc == null) return;
+            // Breaking a block is one of the doc's explicit unvanish triggers.
+            if (bc == BiomeClass.PLAINS_SPY) SpyAbility.unvanish(serverPlayer, "you broke a block");
             switch (bc) {
                 case MOUNTAIN_MINER -> MinerAbility.onBlockBroken(level, serverPlayer, pos, state);
                 case PLAINS_LUMBERJACK -> LumberjackAbility.onBlockBroken(level, serverPlayer, pos, state);
+                case PLAINS_FARMER -> FarmerAbility.onBlockBroken(level, serverPlayer, pos, state);
                 default -> {}
             }
         });
@@ -168,7 +187,7 @@ public final class AbilityHooks {
         // SUCCESS_SERVER: the ability consumed the click; don't also run the
         // vanilla use behaviour of the underlying item (drinking, placing, …).
         return dispatchRightClick(serverPlayer, stack, hit)
-                ? InteractionResult.SUCCESS_SERVER
+                ? InteractionResult.SUCCESS
                 : InteractionResult.PASS;
     }
 
@@ -181,10 +200,14 @@ public final class AbilityHooks {
         BiomeClass bc = classOf(player);
         if (bc == null) return false;
         return switch (bc) {
-            case OCEAN_DEFENDER -> DefenderAbility.tryRightClick(player, stack);
+            case OCEAN_DEFENDER -> DefenderAbility.tryRightClick(player, stack)
+                    || DefenderAlertItem.tryRightClick(player, stack);
             case OCEAN_SIREN -> SirenAbility.tryRightClick(player, stack);
+            case OCEAN_NEPTUNE -> NeptuneAbility.tryRightClick(player, stack);
+            case OCEAN_TRANSPORTER -> TransporterAbility.tryRightClick(player, stack, hit);
             case OCEAN_HEALER -> HealerAbility.tryRightClick(player, stack);
-            case NETHER_ALCHEMIST -> AlchemistAbility.tryRightClick(player, stack);
+            case NETHER_ALCHEMIST -> AlchemistAbility.tryRightClick(player, stack)
+                    || (hit != null && AlchemistCauldron.tryRetrieve(player, hit.getBlockPos()));
             case NETHER_WIZARD -> WizardAbility.tryRightClick(player, stack);
             // Corrupt and the curse field are separate items on the same kit.
             case NETHER_BLOODMAGE -> BloodmageAbility.tryRightClick(player, stack)
@@ -194,10 +217,13 @@ public final class AbilityHooks {
             case NETHER_RIFT_WALKER -> RiftWalkerAbility.tryRightClick(player, stack);
             case PLAINS_FARMER -> FarmerAbility.tryRightClick(player, stack);
             case PLAINS_SCOUT -> ScoutAbility.tryRightClick(player, stack);
-            case MOUNTAIN_BUILDER -> BuilderAbility.tryRightClick(player, stack);
+            case PLAINS_ARCHER -> ArcherAbility.tryRightClick(player, stack);
+            case MOUNTAIN_BUILDER -> BuilderAbility.tryRightClick(player, stack)
+                    || BuilderCache.tryRightClick(player, stack, hit);
             case MOUNTAIN_WARRIOR -> WarriorAbility.tryRightClick(player, stack);
             case MOUNTAIN_BERSERKER -> BerserkerAbility.tryRightClick(player, stack);
             case OCEAN_IMMOBILIZER -> ImmobilizerAbility.tryRightClick(player);
+            case PLAINS_SPY -> SpyAbility.tryRightClick(player);
             case MOUNTAIN_MINER -> MinerAbility.tryRightClick(player, stack);
             case PLAINS_LUMBERJACK -> LumberjackAbility.tryRightClick(player, stack);
             case PLAINS_BARD -> BardAbility.tryRightClick(player, stack, hit);
@@ -211,6 +237,13 @@ public final class AbilityHooks {
      * Fabric's attack callbacks only fire on a swing that connects; left-click
      * abilities are cast at empty air just as often.
      */
+    /** Every jump-key press, routed here by {@link com.regionsmoba.mixin.PlayerInputMixin}. */
+    public static void onSneakPress(ServerPlayer player) {
+        if (!MatchManager.get().isActive()) return;
+        if (classOf(player) != BiomeClass.MOUNTAIN_ACROBAT) return;
+        AcrobatAbility.onSneakPress(player);
+    }
+
     public static void onSwing(ServerPlayer player) {
         if (!MatchManager.get().isActive()) return;
         // A swing that landed on an entity is an attack, not a cast. Without
@@ -223,9 +256,12 @@ public final class AbilityHooks {
         }
         BiomeClass bc = classOf(player);
         if (bc == null) return;
+        // Using a bow, or any other swing-driven action, drops a Spy's vanish.
+        if (bc == BiomeClass.PLAINS_SPY) SpyAbility.unvanish(player, "you acted");
         switch (bc) {
             case OCEAN_IMMOBILIZER -> ImmobilizerAbility.trySwing(player);
             case NETHER_WIZARD -> WizardAbility.trySwing(player);
+            case PLAINS_ARCHER -> ArcherAbility.trySwing(player);
             default -> {}
         }
     }
@@ -264,6 +300,21 @@ public final class AbilityHooks {
                 && classOf(hurtPlayer) == BiomeClass.PLAINS_SCOUT) {
             ScoutAbility.onScoutHit(hurtPlayer);
         }
+
+        // A thrown Tidebringer landing on a player starts the drowning curse.
+        if (source.getEntity() instanceof ServerPlayer thrower
+                && source.getDirectEntity() instanceof ThrownTrident
+                && victim instanceof Player victimPlayer
+                && thrower != victim
+                && classOf(thrower) == BiomeClass.OCEAN_NEPTUNE) {
+            NeptuneAbility.onTridentHit(thrower, victimPlayer);
+        }
+
+        // Getting hit blows a Spy's cover.
+        if (victim instanceof ServerPlayer hurtPlayer
+                && classOf(hurtPlayer) == BiomeClass.PLAINS_SPY) {
+            SpyAbility.unvanish(hurtPlayer, "you were hit");
+        }
     }
 
     public static void tick(MinecraftServer server) {
@@ -279,6 +330,12 @@ public final class AbilityHooks {
         BardAbility.tick(server, tick);
         TinkererAbility.tick(server, tick);
         BloodmageTerraform.tick(server, tick);
+        SpyAbility.tickGlobal(server, tick);
+        NeptuneAbility.tick(server, tick);
+        DefenderAlertItem.tick(server, tick);
+        BuilderCache.tick(server, tick);
+        AlchemistCauldron.tick(server, tick);
+        TransporterAbility.tick(server, tick);
 
         for (UUID id : MatchManager.get().matchPlayers()) {
             ServerPlayer player = server.getPlayerList().getPlayer(id);
@@ -289,6 +346,7 @@ public final class AbilityHooks {
                 case MOUNTAIN_ACROBAT -> AcrobatAbility.tick(player);
                 case OCEAN_DEFENDER -> DefenderAbility.tick(player, tick);
                 case PLAINS_ARCHER -> ArcherAbility.tick(player);
+                case PLAINS_SPY -> SpyAbility.tick(player, tick);
                 default -> {}
             }
         }

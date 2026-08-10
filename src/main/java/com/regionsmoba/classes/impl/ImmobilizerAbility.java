@@ -58,9 +58,9 @@ public final class ImmobilizerAbility {
     private static final String COOLDOWN_ID = "immobilizer:shared";
     private static final String LOCKOUT_ID = "immobilizer:lockout";
 
-    private static final Holder<MobEffect> SLOWNESS = MobEffects.SLOWNESS;
-    private static final Holder<MobEffect> JUMP_BOOST = MobEffects.JUMP_BOOST;
-    private static final Holder<MobEffect> MINING_FATIGUE = MobEffects.MINING_FATIGUE;
+    private static final Holder<MobEffect> SLOWNESS = MobEffects.MOVEMENT_SLOWDOWN;
+    private static final Holder<MobEffect> JUMP_BOOST = MobEffects.JUMP;
+    private static final Holder<MobEffect> MINING_FATIGUE = MobEffects.DIG_SLOWDOWN;
     private static final Holder<MobEffect> ABSORPTION = MobEffects.ABSORPTION;
 
     private ImmobilizerAbility() {}
@@ -89,7 +89,7 @@ public final class ImmobilizerAbility {
             return false;
         }
         if (!Cooldowns.get().ready(target, LOCKOUT_ID)) {
-            tell(immobilizer, target.getGameProfile().name() + " cannot be re-immobilized yet ("
+            tell(immobilizer, target.getGameProfile().getName() + " cannot be re-immobilized yet ("
                     + Cooldowns.get().remainingSeconds(target, LOCKOUT_ID) + "s)", ChatFormatting.GRAY);
             return false;
         }
@@ -104,7 +104,7 @@ public final class ImmobilizerAbility {
         // The lockout runs from release, so it covers the stun plus 15 seconds.
         Cooldowns.get().start(target.getUUID(), LOCKOUT_ID, ticks + REIMMOBILIZE_LOCKOUT_SECONDS * 20);
 
-        tell(immobilizer, "Immobilized " + target.getGameProfile().name()
+        tell(immobilizer, "Immobilized " + target.getGameProfile().getName()
                 + " for " + (ticks / 20.0) + "s.", ChatFormatting.AQUA);
         tell(target, "Immobilized!", ChatFormatting.RED);
         return true;

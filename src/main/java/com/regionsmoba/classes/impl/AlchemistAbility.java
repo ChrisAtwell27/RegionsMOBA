@@ -78,7 +78,7 @@ public final class AlchemistAbility {
             player.drop(drop, false);
         }
         Cooldowns.get().set(player, "alchemist:tome", COOLDOWN_SECONDS);
-        tell(player, "Tome → " + rolled.getName().getString(), ChatFormatting.LIGHT_PURPLE);
+        tell(player, "Tome → " + drop.getHoverName().getString(), ChatFormatting.LIGHT_PURPLE);
         return true;
     }
 

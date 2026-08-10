@@ -8,8 +8,8 @@ import com.regionsmoba.team.BiomeTeam;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 
 import java.util.Map;
 
@@ -65,10 +65,10 @@ public final class TraderRespawn {
             prev.discard();
         }
         EntityType<?> type = (team == BiomeTeam.NETHER) ? EntityType.PIGLIN : EntityType.VILLAGER;
-        Entity spawned = type.spawn(level, pos.toBlockPos(), EntitySpawnReason.COMMAND);
+        Entity spawned = type.spawn(level, pos.toBlockPos(), MobSpawnType.COMMAND);
         if (spawned == null) {
             RegionsMOBA.LOGGER.warn("Trader respawn: failed to spawn {} for {}",
-                    type.builtInRegistryHolder().key().identifier(), team.id());
+                    type.builtInRegistryHolder().key().location(), team.id());
             return false;
         }
         RegionsConfig.get().traders.put(team.id(), new TraderRef(spawned.getUUID(), pos));

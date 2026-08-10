@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 /**
- * Accessor for AbstractFurnaceBlockEntity.litTimeRemaining so FurnaceLifeline can
+ * Accessor for AbstractFurnaceBlockEntity.litTime so FurnaceLifeline can
  * decrement an extra tick per server tick during cold season — the doc rule
  * "Furnace burns fuel twice as fast" is implemented as one extra decrement
  * applied alongside the normal tick.
@@ -13,9 +13,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(AbstractFurnaceBlockEntity.class)
 public interface FurnaceAccessor {
 
-    @Accessor("litTimeRemaining")
+    @Accessor("litTime")
     int regionsmoba$getLitTimeRemaining();
 
-    @Accessor("litTimeRemaining")
+    @Accessor("litTime")
     void regionsmoba$setLitTimeRemaining(int value);
 }

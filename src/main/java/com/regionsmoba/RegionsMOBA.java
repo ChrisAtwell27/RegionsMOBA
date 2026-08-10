@@ -2,6 +2,7 @@ package com.regionsmoba;
 
 import com.regionsmoba.chamber.TrialChamber;
 import com.regionsmoba.classes.AbilityHooks;
+import com.regionsmoba.command.NationsCommand;
 import com.regionsmoba.command.RegionsCommand;
 import com.regionsmoba.command.click.ClickHandler;
 import com.regionsmoba.command.click.PendingRegistrationStore;
@@ -43,6 +44,7 @@ public class RegionsMOBA implements ModInitializer {
     public void onInitialize() {
         RegionsConfig.load();
         RegionsCommand.registerAll();
+        NationsCommand.registerAll();
         ClickHandler.register();
         LobbyFlow.register();
         PvpDamageHook.register();

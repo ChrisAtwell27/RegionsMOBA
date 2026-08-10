@@ -67,7 +67,7 @@ public final class ComposterLifeline {
         if (pos.getX() != composter.x() || pos.getY() != composter.y() || pos.getZ() != composter.z()) {
             return InteractionResult.PASS;
         }
-        if (!world.dimension().identifier().toString().equals(composter.dimensionOrDefault())) {
+        if (!world.dimension().location().toString().equals(composter.dimensionOrDefault())) {
             return InteractionResult.PASS;
         }
 

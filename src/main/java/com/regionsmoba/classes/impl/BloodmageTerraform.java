@@ -22,12 +22,17 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -45,9 +50,11 @@ import java.util.UUID;
  *   Damage and debuffs are PVP-gated; placing outside a PVP window still burns
  *   the cooldown.
  *
- * The doc's "reskinned as nether blocks" is cosmetic and is NOT implemented —
- * the field is marked with particles instead. Everything that affects play (the
- * radius, the debuffs, the grace period, the placement restriction) is here.
+ * The "reskinned as nether blocks" visual replaces surface blocks inside the
+ * radius and restores them when the field expires. Originals are captured up
+ * front rather than reconstructed, so terrain someone edits mid-field is not
+ * clobbered on the way out — only the blocks this field actually changed, and
+ * only if they are still the block it put there.
  */
 public final class BloodmageTerraform {
 
@@ -76,6 +83,8 @@ public final class BloodmageTerraform {
         final long graceUntil;
         /** Enemies standing in the field when it was placed — immune during grace. */
         final Set<UUID> grandfathered = new HashSet<>();
+        /** Blocks this field reskinned, mapped to what was there before. */
+        final Map<BlockPos, BlockState> reskinned = new HashMap<>();
 
         Field(BlockPosData centre, BiomeTeam owner, long startTick) {
             this.centre = centre;
@@ -99,7 +108,7 @@ public final class BloodmageTerraform {
         MatchPlayerState self = TeamAssignments.get().state(bloodmage.getUUID());
         if (self == null || self.team == null) return true;
 
-        ServerLevel level = bloodmage.level();
+        ServerLevel level = bloodmage.serverLevel();
         BlockPos centre = bloodmage.blockPosition();
         if (nearLifeline(level, centre)) {
             tell(bloodmage, "Too close to a lifeline block (needs "
@@ -116,6 +125,7 @@ public final class BloodmageTerraform {
         for (Player p : playersInside(level, centre)) {
             field.grandfathered.add(p.getUUID());
         }
+        reskin(level, centre, field);
         FIELDS.add(field);
 
         Cooldowns.get().set(bloodmage, COOLDOWN_ID, COOLDOWN_SECONDS);
@@ -136,11 +146,13 @@ public final class BloodmageTerraform {
         Iterator<Field> it = FIELDS.iterator();
         while (it.hasNext()) {
             Field field = it.next();
+            ServerLevel fieldLevel = server.getLevel(field.centre.dimensionKey());
             if (globalTick >= field.endTick) {
                 it.remove();
+                if (fieldLevel != null) restore(fieldLevel, field);
                 continue;
             }
-            ServerLevel level = server.getLevel(field.centre.dimensionKey());
+            ServerLevel level = fieldLevel;
             if (level == null) continue;
             BlockPos centre = field.centre.toBlockPos();
             if (!level.hasChunkAt(centre)) continue;
@@ -159,6 +171,58 @@ public final class BloodmageTerraform {
                 p.addEffect(new MobEffectInstance(HUNGER, HUNGER_TICKS, HUNGER_AMPLIFIER, true, false, true));
             }
         }
+    }
+
+    /**
+     * Swaps the top surface block of each column in the radius for its Nether
+     * counterpart, recording the original. Only the surface is touched — a full
+     * sphere would be thousands of block updates for a 30-second effect.
+     */
+    private static void reskin(ServerLevel level, BlockPos centre, Field field) {
+        int radius = (int) RADIUS;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx * dx + dz * dz > radius * radius) continue;
+                for (int dy = 3; dy >= -3; dy--) {
+                    BlockPos pos = centre.offset(dx, dy, dz);
+                    BlockState state = level.getBlockState(pos);
+                    BlockState replacement = netherSkin(state);
+                    if (replacement == null) continue;
+                    if (!level.getBlockState(pos.above()).isAir()) continue; // not the surface
+                    field.reskinned.put(pos.immutable(), state);
+                    level.setBlock(pos, replacement, Block.UPDATE_ALL);
+                    break;
+                }
+            }
+        }
+    }
+
+    /** Restores the originals, skipping anything that has changed since. */
+    private static void restore(ServerLevel level, Field field) {
+        for (Map.Entry<BlockPos, BlockState> entry : field.reskinned.entrySet()) {
+            BlockPos pos = entry.getKey();
+            if (!level.hasChunkAt(pos)) continue;
+            BlockState current = level.getBlockState(pos);
+            if (netherSkin(entry.getValue()) != null && !current.is(netherSkin(entry.getValue()).getBlock())) {
+                continue; // someone changed it — leave their work alone
+            }
+            level.setBlock(pos, entry.getValue(), Block.UPDATE_ALL);
+        }
+        field.reskinned.clear();
+    }
+
+    /** The Nether counterpart for a surface block, or null if it isn't reskinnable. */
+    private static BlockState netherSkin(BlockState state) {
+        if (state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT) || state.is(Blocks.PODZOL)) {
+            return Blocks.CRIMSON_NYLIUM.defaultBlockState();
+        }
+        if (state.is(Blocks.STONE) || state.is(Blocks.COBBLESTONE) || state.is(Blocks.DEEPSLATE)) {
+            return Blocks.NETHERRACK.defaultBlockState();
+        }
+        if (state.is(Blocks.SAND) || state.is(Blocks.GRAVEL)) {
+            return Blocks.SOUL_SAND.defaultBlockState();
+        }
+        return null;
     }
 
     private static void markField(ServerLevel level, BlockPos centre) {
@@ -185,7 +249,7 @@ public final class BloodmageTerraform {
 
     private static boolean tooClose(ServerLevel level, BlockPos pos, BlockPosData lifeline) {
         if (lifeline == null) return false;
-        if (!lifeline.dimensionOrDefault().equals(level.dimension().identifier().toString())) return false;
+        if (!lifeline.dimensionOrDefault().equals(level.dimension().location().toString())) return false;
         return lifeline.toBlockPos().distSqr(pos) <= LIFELINE_CLEARANCE * LIFELINE_CLEARANCE;
     }
 

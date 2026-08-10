@@ -1,6 +1,6 @@
 # RegionsMOBA
 
-Fabric minigame mod for Minecraft 1.21.11. Four asymmetric nations compete on a shared map. Dormant by default. A game starts when an admin places a `[Nations]` sign and enough players right-click to join.
+Fabric minigame mod for Minecraft 1.21.1. Four asymmetric nations compete on a shared map. Dormant by default. A game starts when an admin places a `[Nations]` sign and enough players right-click to join.
 
 ## Docs
 

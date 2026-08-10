@@ -17,7 +17,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -141,7 +141,7 @@ public final class DepositCommands {
     }
 
     private static int startMobAdd(CommandSourceStack src, String mobId, int interval) {
-        Identifier id = Identifier.tryParse(mobId);
+        ResourceLocation id = ResourceLocation.tryParse(mobId);
         if (id == null || !BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
             CommandHelpers.fail(src, "Unknown entity type: " + mobId);
             return 0;
@@ -170,7 +170,7 @@ public final class DepositCommands {
                 return 0;
             }
             if (!prev.markedPositions.isEmpty()) {
-                VisualMarkers.revertAll(player, player.level(), prev.markedPositions);
+                VisualMarkers.revertAll(player, player.serverLevel(), prev.markedPositions);
             }
             String summary = prev.isSession()
                     ? prev.kind + " ended; " + prev.registered + " block(s) registered"

@@ -13,7 +13,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -101,7 +101,7 @@ public final class FurnaceLifeline {
             float headroom = p.getHealth() - DAMAGE_FLOOR_HP;
             if (headroom <= 0) continue;
             float dmg = Math.min(DAMAGE_AMOUNT, headroom);
-            p.hurtServer(level, level.damageSources().wither(), dmg);
+            p.hurt(level.damageSources().wither(), dmg);
             p.sendSystemMessage(Component.literal("The furnace is out — your strength fades.")
                     .withStyle(ChatFormatting.RED));
         }
@@ -112,7 +112,7 @@ public final class FurnaceLifeline {
         LifelineState.get().lastFurnaceDamageTick = -1;
     }
 
-    /** Avoid unused-import warning on Identifier (used implicitly via dimensionKey). */
+    /** Avoid unused-import warning on ResourceLocation (used implicitly via dimensionKey). */
     @SuppressWarnings("unused")
-    private static final Class<?> KEEP_IDENTIFIER = Identifier.class;
+    private static final Class<?> KEEP_IDENTIFIER = ResourceLocation.class;
 }

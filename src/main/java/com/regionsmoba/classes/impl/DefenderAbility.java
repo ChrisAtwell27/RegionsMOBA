@@ -9,13 +9,13 @@ import com.regionsmoba.lifeline.LifelineState;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -45,7 +45,7 @@ public final class DefenderAbility {
     public static final int REGEN_DURATION_TICKS = 40;
     public static final double MAX_BONUS_HP = 20.0;
 
-    private static final Identifier HP_MOD_ID = Identifier.parse("regionsmoba:defender_conduit_hp");
+    private static final ResourceLocation HP_MOD_ID = ResourceLocation.parse("regionsmoba:defender_conduit_hp");
     private static final Holder<MobEffect> REGEN = MobEffects.REGENERATION;
 
     private DefenderAbility() {}
@@ -57,8 +57,8 @@ public final class DefenderAbility {
             clearBonusHp(player);
             return;
         }
-        ServerLevel level = player.level();
-        if (!level.dimension().identifier().toString().equals(conduit.dimensionOrDefault())) {
+        ServerLevel level = player.serverLevel();
+        if (!level.dimension().location().toString().equals(conduit.dimensionOrDefault())) {
             clearBonusHp(player);
             return;
         }
@@ -118,7 +118,7 @@ public final class DefenderAbility {
         double x = conduit.x() + 0.5;
         double y = conduit.y() + 3;
         double z = conduit.z() + 0.5;
-        player.teleportTo(level, x, y, z, Set.<Relative>of(), player.getYRot(), player.getXRot(), true);
+        player.teleportTo(level, x, y, z, Set.<RelativeMovement>of(), player.getYRot(), player.getXRot());
         Cooldowns.get().set(player, "defender:warp", WARP_COOLDOWN_SECONDS);
         tell(player, "Guardian's Warp — to the conduit.", ChatFormatting.AQUA);
         return true;

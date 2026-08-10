@@ -98,7 +98,7 @@ public final class HealerAbility {
         target.removeAllEffects();
         healer.removeAllEffects();
         Cooldowns.get().set(healer, "healer:focused", FOCUSED_HEAL_COOLDOWN_SECONDS);
-        healer.sendSystemMessage(Component.literal("Focused heal — " + target.getGameProfile().name())
+        healer.sendSystemMessage(Component.literal("Focused heal — " + target.getGameProfile().getName())
                 .withStyle(ChatFormatting.GREEN));
         return true;
     }

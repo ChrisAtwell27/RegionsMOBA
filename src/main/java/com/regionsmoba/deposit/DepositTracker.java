@@ -15,13 +15,13 @@ import com.regionsmoba.timeline.MatchPhase;
 import com.regionsmoba.timeline.Timeline;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -148,12 +148,12 @@ public final class DepositTracker {
     }
 
     private void spawnMob(ServerLevel lvl, MobDeposit d) {
-        Identifier id = Identifier.tryParse(d.mobId());
+        ResourceLocation id = ResourceLocation.tryParse(d.mobId());
         if (id == null) return;
         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
         if (type == null) return;
         BlockPos pos = d.pos().toBlockPos().above();
-        Entity spawned = type.spawn(lvl, pos, EntitySpawnReason.SPAWNER);
+        Entity spawned = type.spawn(lvl, pos, MobSpawnType.SPAWNER);
         if (spawned != null) ModEntities.track(spawned);
     }
 
@@ -172,12 +172,12 @@ public final class DepositTracker {
     private boolean isInsideMountain(BlockPosData pos, ServerLevel level) {
         Area mountain = RegionsConfig.get().biomeBounds(BiomeTeam.MOUNTAIN);
         if (mountain == null || !mountain.isComplete()) return false;
-        if (!mountain.dimension().equals(level.dimension().identifier().toString())) return false;
+        if (!mountain.dimension().equals(level.dimension().location().toString())) return false;
         return mountain.contains(pos.toBlockPos());
     }
 
     private static BlockState blockStateFor(String blockId, Block fallback) {
-        Identifier id = Identifier.tryParse(blockId);
+        ResourceLocation id = ResourceLocation.tryParse(blockId);
         if (id == null) return fallback.defaultBlockState();
         Block block = BuiltInRegistries.BLOCK.getOptional(id).orElse(null);
         if (block == null) {

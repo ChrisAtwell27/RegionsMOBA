@@ -2,8 +2,8 @@ package com.regionsmoba.config;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
@@ -21,7 +21,7 @@ public record BlockPosData(String dimension, int x, int y, int z) {
     }
 
     public static String dimensionId(ServerLevel level) {
-        return level.dimension().identifier().toString();
+        return level.dimension().location().toString();
     }
 
     public BlockPos toBlockPos() {
@@ -34,7 +34,7 @@ public record BlockPosData(String dimension, int x, int y, int z) {
     }
 
     public ResourceKey<Level> dimensionKey() {
-        Identifier id = Identifier.parse(dimensionOrDefault());
+        ResourceLocation id = ResourceLocation.parse(dimensionOrDefault());
         return ResourceKey.create(Registries.DIMENSION, id);
     }
 

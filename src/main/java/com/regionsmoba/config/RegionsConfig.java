@@ -53,6 +53,15 @@ public final class RegionsConfig {
     public List<BlockDeposit> blockDeposits = new ArrayList<>();
     public List<MobDeposit> mobDeposits = new ArrayList<>();
 
+    /**
+     * Every [Nations] sign the server has seen — recorded when one is saved with a
+     * valid header, and again on each right-click so signs that predate the mod get
+     * picked up. Persisted because {@code /nations join} has to find lobbies without
+     * anyone having clicked a sign first, and the in-memory queue registry only
+     * knows signs that already have joiners.
+     */
+    public List<BlockPosData> nationsSigns = new ArrayList<>();
+
     /** Emeralds per Plains member for the first cold season; scales linearly per season. */
     public int plainsQuotaBase = 24;
 
@@ -100,6 +109,21 @@ public final class RegionsConfig {
         if (c.oreDeposits == null) c.oreDeposits = new ArrayList<>();
         if (c.blockDeposits == null) c.blockDeposits = new ArrayList<>();
         if (c.mobDeposits == null) c.mobDeposits = new ArrayList<>();
+        if (c.nationsSigns == null) c.nationsSigns = new ArrayList<>();
+    }
+
+    /** Record a [Nations] sign position if it isn't known yet. No-op when already present. */
+    public static void rememberNationsSign(BlockPosData pos) {
+        if (pos == null || instance == null) return;
+        if (instance.nationsSigns.contains(pos)) return;
+        instance.nationsSigns.add(pos);
+        save();
+    }
+
+    /** Drop a sign position that is no longer a valid [Nations] sign. */
+    public static void forgetNationsSign(BlockPosData pos) {
+        if (pos == null || instance == null) return;
+        if (instance.nationsSigns.remove(pos)) save();
     }
 
     public static void save() {

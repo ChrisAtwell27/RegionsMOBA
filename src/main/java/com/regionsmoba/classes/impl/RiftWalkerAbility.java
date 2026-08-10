@@ -15,7 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
@@ -69,7 +69,7 @@ public final class RiftWalkerAbility {
             return true;
         }
         player.teleportTo(level, target.x() + 0.5, target.y(), target.z() + 0.5,
-                Set.<Relative>of(), player.getYRot(), player.getXRot(), true);
+                Set.<RelativeMovement>of(), player.getYRot(), player.getXRot());
         player.addEffect(new MobEffectInstance(
                 MobEffects.WEAKNESS, WEAKNESS_DURATION_TICKS, 1, true, false, true));
         Cooldowns.get().set(player, "rift:walk", COOLDOWN_SECONDS);

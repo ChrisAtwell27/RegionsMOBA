@@ -45,9 +45,9 @@ public final class NetherColdWater {
             if (s == null || s.team != BiomeTeam.NETHER || s.spectator) continue;
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null || !p.isInWater()) continue;
-            ServerLevel level = p.level();
+            ServerLevel level = p.serverLevel();
             if (hasHeatNearby(level, p.blockPosition())) continue;
-            p.hurtServer(level, level.damageSources().wither(), DAMAGE_AMOUNT);
+            p.hurt(level.damageSources().wither(), DAMAGE_AMOUNT);
         }
     }
 

@@ -169,10 +169,14 @@ Spawns with wooden tools, a bow, and 6 arrows.
 
 ### Double Jump
 
-Double-tap jump in mid-air to leap upward.
+Double-tap sneak in mid-air to leap upward.
 
 - Reaches up to 6 blocks above the start point.
 - **10-second cooldown.**
+- The trigger is sneak rather than jump because Minecraft 1.21.1 only sends the
+  jump key to the server while the player is riding a vehicle — a mid-air jump
+  press is invisible server-side. Sneak presses always arrive, so the mod uses
+  those. Both taps must land within half a second while airborne.
 
 ### Fall Immunity
 

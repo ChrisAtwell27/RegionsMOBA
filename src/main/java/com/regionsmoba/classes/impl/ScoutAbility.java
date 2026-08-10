@@ -44,7 +44,7 @@ public final class ScoutAbility {
     public static boolean tryRightClick(ServerPlayer player, ItemStack stack) {
         if (!ItemTags.hasName(stack, ClassKits.Names.SCOUT_GRAPPLE)) return false;
 
-        if (player.isOnFire() || player.hasEffect(MobEffects.SLOWNESS)) {
+        if (player.isOnFire() || player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN)) {
             tell(player, "Grapple unavailable while on fire or slowed.", ChatFormatting.RED);
             return true;
         }
@@ -53,7 +53,7 @@ public final class ScoutAbility {
             return true;
         }
 
-        ServerLevel level = player.level();
+        ServerLevel level = player.serverLevel();
         Vec3 from = player.getEyePosition(1.0f);
         Vec3 dir = player.getLookAngle();
         Vec3 to = from.add(dir.scale(MAX_RANGE));

@@ -45,7 +45,9 @@ Row 2: <min_players>
 
 Row 1 must be `[Nations]`. Row 2 must be a positive integer and a multiple of 4.
 
-Players right-click to join. When the join count reaches the minimum, all joiners teleport to the lobby and the match begins.
+Players right-click to join, or run `/nations join` from anywhere to be queued at the fullest lobby automatically. When the join count reaches the minimum, all joiners teleport to the lobby and the match begins.
+
+Saving a valid sign registers it, so `/nations join` finds it before anyone has clicked it. Signs that predate the mod register on their first right-click.
 
 ## Admin commands during a match
 

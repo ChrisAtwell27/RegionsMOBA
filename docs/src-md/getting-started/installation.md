@@ -6,14 +6,14 @@ Server-side Fabric mod. Only the server needs the mod.
 
 | Component | Version |
 | --- | --- |
-| Minecraft | 1.21.11 |
-| Fabric Loader | 0.19.2+ |
-| Fabric API | 0.141.3+1.21.11 |
+| Minecraft | 1.21.1 |
+| Fabric Loader | 0.19.3+ |
+| Fabric API | 0.116.15+1.21.1 |
 | Java | 21+ |
 
 ## Install
 
-1. Set up a Fabric server for Minecraft 1.21.11.
+1. Set up a Fabric server for Minecraft 1.21.1.
 2. Download the RegionsMOBA jar from the Releases page.
 3. Download Fabric API.
 4. Place both jars in `mods/`.

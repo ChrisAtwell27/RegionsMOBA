@@ -12,11 +12,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.zombie.Drowned;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.monster.Drowned;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -81,7 +81,7 @@ public final class DrownedSpawning {
     }
 
     private static void spawnDrowned(ServerLevel level, BlockPos pos) {
-        Entity e = EntityType.DROWNED.spawn(level, pos, EntitySpawnReason.NATURAL);
+        Entity e = EntityType.DROWNED.spawn(level, pos, MobSpawnType.NATURAL);
         if (e == null) return;
         ModEntities.track(e);
         live.add(e.getUUID());

@@ -56,7 +56,7 @@ public final class WarriorAbility {
     public static final int KILL_COOLDOWN_REDUCTION_SECONDS = 10;
 
     private static final String COOLDOWN_ID = "warrior:frenzy";
-    private static final Holder<MobEffect> SPEED = MobEffects.SPEED;
+    private static final Holder<MobEffect> SPEED = MobEffects.MOVEMENT_SPEED;
 
     private static final class Frenzy {
         final boolean combat;

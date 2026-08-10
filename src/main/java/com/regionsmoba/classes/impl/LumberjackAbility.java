@@ -108,7 +108,7 @@ public final class LumberjackAbility {
 
         int amount = armorDamageFor(attacker.getMainHandItem().getItem());
         if (amount <= 0) return;
-        for (EquipmentSlot slot : EquipmentSlot.VALUES) {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (!slot.isArmor()) continue;
             ItemStack piece = victimPlayer.getItemBySlot(slot);
             if (piece.isEmpty() || !piece.isDamageableItem()) continue;

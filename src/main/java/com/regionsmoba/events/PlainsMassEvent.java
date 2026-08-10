@@ -9,8 +9,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 
 import java.util.Random;
 
@@ -41,7 +41,7 @@ public final class PlainsMassEvent {
         net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimKey =
                 net.minecraft.resources.ResourceKey.create(
                         net.minecraft.core.registries.Registries.DIMENSION,
-                        net.minecraft.resources.Identifier.parse(bounds.dimension()));
+                        net.minecraft.resources.ResourceLocation.parse(bounds.dimension()));
         ServerLevel level = server.getLevel(dimKey);
         if (level == null) return;
 
@@ -50,7 +50,7 @@ public final class PlainsMassEvent {
             BlockPos centre = randomGroundIn(level, bounds, rng);
             for (int i = 0; i < PER_SQUAD; i++) {
                 BlockPos p = centre.offset(rng.nextInt(5) - 2, 0, rng.nextInt(5) - 2);
-                EntitySpawnReason reason = (i == 0) ? EntitySpawnReason.PATROL : EntitySpawnReason.PATROL;
+                MobSpawnType reason = (i == 0) ? MobSpawnType.PATROL : MobSpawnType.PATROL;
                 Entity e = EntityType.PILLAGER.spawn(level, p, reason);
                 if (e == null) continue;
                 ModEntities.track(e);

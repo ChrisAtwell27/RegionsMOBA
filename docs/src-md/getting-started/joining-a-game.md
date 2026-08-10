@@ -1,14 +1,16 @@
 # Joining a Game
 
-## Find a game
-
-Look for a sign starting with `[Nations]`. It shows the current join count.
-
 ## Join
 
-Right-click the sign. Right-click again to leave before the match starts.
+Run `/nations join`. You're queued at the fullest open lobby on the server, no sign-hunting needed. Run it again later and you'll be moved if a busier lobby has appeared.
 
-When the minimum is reached, you teleport to the lobby automatically.
+`/nations leave` drops you from the queue.
+
+## Join at a specific sign
+
+Look for a sign starting with `[Nations]` — row 3 shows the current join count. Right-click it to join that specific lobby, right-click the same sign again to leave.
+
+Either way, when the minimum is reached you teleport to the lobby automatically.
 
 ## In the lobby
 

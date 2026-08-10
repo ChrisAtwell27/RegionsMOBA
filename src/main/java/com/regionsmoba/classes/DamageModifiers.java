@@ -1,7 +1,7 @@
 package com.regionsmoba.classes;
 
 import com.regionsmoba.team.BiomeClass;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -26,8 +26,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
  */
 public final class DamageModifiers {
 
-    private static final Identifier WARRIOR_BONUS = Identifier.parse("regionsmoba:warrior_bonus");
-    private static final Identifier VAMPIRE_MELEE = Identifier.parse("regionsmoba:vampire_melee");
+    private static final ResourceLocation WARRIOR_BONUS = ResourceLocation.parse("regionsmoba:warrior_bonus");
+    private static final ResourceLocation VAMPIRE_MELEE = ResourceLocation.parse("regionsmoba:vampire_melee");
 
     private DamageModifiers() {}
 

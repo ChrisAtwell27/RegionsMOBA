@@ -9,7 +9,7 @@ import com.regionsmoba.team.TeamAssignments;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -55,7 +55,7 @@ public final class BloodmageAbility {
     public static final double CORRUPT_MAX_HP_LOSS = 4.0;
 
     private static final String CORRUPT_COOLDOWN_ID = "bloodmage:corrupt";
-    private static final Identifier CURSE_ID = Identifier.parse("regionsmoba:bloodmage_curse");
+    private static final ResourceLocation CURSE_ID = ResourceLocation.parse("regionsmoba:bloodmage_curse");
 
     private static final Holder<MobEffect> POISON = MobEffects.POISON;
     private static final Holder<MobEffect> WITHER = MobEffects.WITHER;

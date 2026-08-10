@@ -16,7 +16,6 @@ import com.regionsmoba.command.sub.VersionCommand;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.server.permissions.Permissions;
 
 /**
  * Registers the /regions command tree. Each subcommand owns its own register method
@@ -37,7 +36,7 @@ public final class RegionsCommand {
 
     private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(ROOT)
-                .requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER));
+                .requires(src -> src.hasPermission(Commands.LEVEL_GAMEMASTERS));
 
         VersionCommand.register(root);
         StatusCommand.register(root);

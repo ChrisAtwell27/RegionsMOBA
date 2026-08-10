@@ -37,7 +37,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.phys.AABB;
 
 import java.util.Iterator;
@@ -220,7 +220,7 @@ public final class DebugCommands {
             return 0;
         }
         BuildMode.set(player.getUUID(), on);
-        CommandHelpers.ok(src, "Build mode " + (on ? "ON" : "OFF") + " for " + player.getGameProfile().name());
+        CommandHelpers.ok(src, "Build mode " + (on ? "ON" : "OFF") + " for " + player.getGameProfile().getName());
         return 1;
     }
 
@@ -229,12 +229,12 @@ public final class DebugCommands {
     private static int setLives(CommandSourceStack src, ServerPlayer target, int count) {
         MatchPlayerState state = TeamAssignments.get().state(target.getUUID());
         if (state == null) {
-            CommandHelpers.fail(src, target.getGameProfile().name() + " is not in the current match.");
+            CommandHelpers.fail(src, target.getGameProfile().getName() + " is not in the current match.");
             return 0;
         }
         state.lives = count;
         if (count == 0) state.spectator = true;
-        CommandHelpers.ok(src, target.getGameProfile().name() + " lives = " + count);
+        CommandHelpers.ok(src, target.getGameProfile().getName() + " lives = " + count);
         return 1;
     }
 
@@ -246,21 +246,21 @@ public final class DebugCommands {
         }
         MatchPlayerState state = TeamAssignments.get().state(target.getUUID());
         if (state == null) {
-            CommandHelpers.fail(src, target.getGameProfile().name() + " is not in the current match.");
+            CommandHelpers.fail(src, target.getGameProfile().getName() + " is not in the current match.");
             return 0;
         }
         if (state.team != null) TeamPassives.clear(target, state.team);
         state.team = team.get();
         state.biomeClass = null;
         TeamPassives.apply(target, team.get());
-        CommandHelpers.ok(src, target.getGameProfile().name() + " → " + team.get().displayName());
+        CommandHelpers.ok(src, target.getGameProfile().getName() + " → " + team.get().displayName());
         return 1;
     }
 
     private static int setClass(CommandSourceStack src, ServerPlayer target, String classId) {
         MatchPlayerState state = TeamAssignments.get().state(target.getUUID());
         if (state == null || state.team == null) {
-            CommandHelpers.fail(src, target.getGameProfile().name() + " has no team yet.");
+            CommandHelpers.fail(src, target.getGameProfile().getName() + " has no team yet.");
             return 0;
         }
         Optional<BiomeClass> bc = BiomeClass.fromId(state.team, classId);
@@ -269,7 +269,7 @@ public final class DebugCommands {
             return 0;
         }
         state.biomeClass = bc.get();
-        CommandHelpers.ok(src, target.getGameProfile().name() + " → " + bc.get().displayName());
+        CommandHelpers.ok(src, target.getGameProfile().getName() + " → " + bc.get().displayName());
         return 1;
     }
 
@@ -344,17 +344,17 @@ public final class DebugCommands {
     private static int reKit(CommandSourceStack src, ServerPlayer target) {
         MatchPlayerState s = TeamAssignments.get().state(target.getUUID());
         if (s == null || s.biomeClass == null) {
-            CommandHelpers.fail(src, target.getGameProfile().name() + " has no class set.");
+            CommandHelpers.fail(src, target.getGameProfile().getName() + " has no class set.");
             return 0;
         }
         KitGrant.grant(target, s.biomeClass);
-        CommandHelpers.ok(src, target.getGameProfile().name() + " kit re-granted: " + s.biomeClass.displayName());
+        CommandHelpers.ok(src, target.getGameProfile().getName() + " kit re-granted: " + s.biomeClass.displayName());
         return 1;
     }
 
     private static int clearCooldowns(CommandSourceStack src, ServerPlayer target) {
         Cooldowns.get().clearForPlayer(target.getUUID());
-        CommandHelpers.ok(src, target.getGameProfile().name() + " cooldowns cleared.");
+        CommandHelpers.ok(src, target.getGameProfile().getName() + " cooldowns cleared.");
         return 1;
     }
 
@@ -476,8 +476,8 @@ public final class DebugCommands {
             return 0;
         }
         target.teleportTo(level, pos.x() + 0.5, pos.y(), pos.z() + 0.5,
-                Set.<Relative>of(), target.getYRot(), target.getXRot(), true);
-        CommandHelpers.ok(src, "Teleported " + target.getGameProfile().name() + " to " + (biomeId == null ? "lobby" : biomeId));
+                Set.<RelativeMovement>of(), target.getYRot(), target.getXRot());
+        CommandHelpers.ok(src, "Teleported " + target.getGameProfile().getName() + " to " + (biomeId == null ? "lobby" : biomeId));
         return 1;
     }
 
@@ -499,7 +499,7 @@ public final class DebugCommands {
     private static int mobKill(CommandSourceStack src, int radius) {
         ServerLevel level;
         try {
-            level = src.getPlayerOrException().level();
+            level = src.getPlayerOrException().serverLevel();
         } catch (CommandSyntaxException e) {
             CommandHelpers.fail(src, "/regions debug mob kill must be run by a player.");
             return 0;

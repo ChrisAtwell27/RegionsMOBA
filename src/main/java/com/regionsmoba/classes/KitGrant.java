@@ -1,10 +1,16 @@
 package com.regionsmoba.classes;
 
 import com.regionsmoba.classes.impl.BardAbility;
+import com.regionsmoba.classes.impl.ArcherAbility;
 import com.regionsmoba.classes.impl.BerserkerAbility;
+import com.regionsmoba.classes.impl.EnchanterAbility;
 import com.regionsmoba.classes.impl.BloodmageAbility;
+import com.regionsmoba.classes.impl.BuilderCache;
+import com.regionsmoba.classes.impl.DefenderAlertItem;
 import com.regionsmoba.classes.impl.LumberjackAbility;
 import com.regionsmoba.classes.impl.MinerAbility;
+import com.regionsmoba.classes.impl.NeptuneAbility;
+import com.regionsmoba.classes.impl.SpyAbility;
 import com.regionsmoba.classes.impl.TinkererAbility;
 import com.regionsmoba.classes.impl.WarriorAbility;
 import com.regionsmoba.classes.impl.WizardAbility;
@@ -33,7 +39,7 @@ public final class KitGrant {
 
     public static void grant(ServerPlayer player, BiomeClass biomeClass) {
         player.getInventory().clearContent();
-        for (EquipmentSlot slot : EquipmentSlot.VALUES) {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.isArmor()) player.setItemSlot(slot, ItemStack.EMPTY);
         }
 
@@ -45,6 +51,14 @@ public final class KitGrant {
         BardAbility.clearForPlayer(player.getUUID());
         TinkererAbility.clearForPlayer(player.getUUID());
         WizardAbility.clearForPlayer(player.getUUID());
+        // Respawn or class change replaces the ServerPlayer, so drop the vanish
+        // bookkeeping rather than leaving a masked-equipment entry behind.
+        SpyAbility.clearForPlayer(player.getUUID());
+        NeptuneAbility.clearForPlayer(player.getUUID());
+        DefenderAlertItem.clearForPlayer(player.getUUID());
+        BuilderCache.clearForPlayer(player.getUUID());
+        ArcherAbility.clearForPlayer(player.getUUID());
+        EnchanterAbility.clearForPlayer(player.getUUID());
         // A Bloodmage curse is a debuff on the *victim*, so this clears one the
         // player is carrying, not one they cast.
         BloodmageAbility.clearCurse(player);

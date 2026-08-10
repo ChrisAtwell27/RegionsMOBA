@@ -58,10 +58,10 @@ public final class TinkererAbility {
     private static final Map<Block, PadSpec> PADS = new HashMap<>();
 
     static {
-        PADS.put(Blocks.REDSTONE_BLOCK, new PadSpec(MobEffects.SPEED, 0, 45 * 20, "Speed I"));
-        PADS.put(Blocks.COAL_BLOCK, new PadSpec(MobEffects.HASTE, 0, 45 * 20, "Haste I"));
-        PADS.put(Blocks.DIAMOND_BLOCK, new PadSpec(MobEffects.SPEED, 1, 20 * 20, "Speed II"));
-        PADS.put(Blocks.GOLD_BLOCK, new PadSpec(MobEffects.HASTE, 1, 15 * 20, "Haste II"));
+        PADS.put(Blocks.REDSTONE_BLOCK, new PadSpec(MobEffects.MOVEMENT_SPEED, 0, 45 * 20, "Speed I"));
+        PADS.put(Blocks.COAL_BLOCK, new PadSpec(MobEffects.DIG_SPEED, 0, 45 * 20, "Haste I"));
+        PADS.put(Blocks.DIAMOND_BLOCK, new PadSpec(MobEffects.MOVEMENT_SPEED, 1, 20 * 20, "Speed II"));
+        PADS.put(Blocks.GOLD_BLOCK, new PadSpec(MobEffects.DIG_SPEED, 1, 15 * 20, "Haste II"));
         PADS.put(Blocks.DEEPSLATE, new PadSpec(MobEffects.ABSORPTION, 0, 20 * 20, "Absorption I"));
     }
 
@@ -84,7 +84,7 @@ public final class TinkererAbility {
         PadSpec spec = PADS.get(block);
         if (spec == null) return false;
 
-        ServerLevel level = tinkerer.level();
+        ServerLevel level = tinkerer.serverLevel();
         BlockPos target = hit.getBlockPos().relative(hit.getDirection());
         if (!level.getBlockState(target).canBeReplaced()) {
             tell(tinkerer, "No room to place the PowerPad there.", ChatFormatting.GRAY);

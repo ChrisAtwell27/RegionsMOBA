@@ -11,7 +11,7 @@ import net.minecraft.world.item.trading.MerchantOffers;
 /**
  * A fixed-offer Merchant owned by the mod rather than by an entity.
  *
- * Piglin does not implement Merchant and there is no SimpleMerchant in 1.21.11,
+ * Piglin does not implement Merchant and there is no SimpleMerchant in 1.21.1,
  * so trades cannot be attached to the Nether trader as villager offers. Supplying
  * our own Merchant and opening a MerchantMenu against it works for any entity
  * type and gives all four traders identical behavior.
@@ -78,7 +78,11 @@ public final class RegionsMerchant implements Merchant {
         return false;
     }
 
-    @Override
+    /**
+     * Not a Merchant method on 1.21.1 — MerchantMenu.stillValid() checks
+     * getTradingPlayer() there instead. Kept because the trader screens call it
+     * directly and it documents the intent: our merchants never expire.
+     */
     public boolean stillValid(Player player) {
         return true;
     }

@@ -13,7 +13,7 @@ import com.regionsmoba.team.TeamAssignments;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -78,17 +78,17 @@ public final class BerserkerAbility {
     public static final int WILL_COOLDOWN_SECONDS = 65;
 
     private static final String WILL_COOLDOWN_ID = "berserker:will";
-    private static final Identifier STACK_ID = Identifier.parse("regionsmoba:berserker_hearts");
-    private static final Identifier WILL_KNOCKBACK_ID = Identifier.parse("regionsmoba:berserker_will_knockback");
+    private static final ResourceLocation STACK_ID = ResourceLocation.parse("regionsmoba:berserker_hearts");
+    private static final ResourceLocation WILL_KNOCKBACK_ID = ResourceLocation.parse("regionsmoba:berserker_will_knockback");
 
-    private static final Holder<MobEffect> SPEED = MobEffects.SPEED;
+    private static final Holder<MobEffect> SPEED = MobEffects.MOVEMENT_SPEED;
     /** Movement-impairing effects Unbreakable Will suppresses for its duration. */
     private static final List<Holder<MobEffect>> IMPAIRING = List.of(
-            MobEffects.SLOWNESS,
+            MobEffects.MOVEMENT_SLOWDOWN,
             MobEffects.LEVITATION,
             MobEffects.SLOW_FALLING,
             MobEffects.BLINDNESS,
-            MobEffects.NAUSEA);
+            MobEffects.CONFUSION);
 
     /** Bonus HP above {@link #BASE_MAX_HP}, keyed by player. Survives class change and relog. */
     private static final Map<UUID, Double> STACK = new HashMap<>();
@@ -277,7 +277,7 @@ public final class BerserkerAbility {
     private static boolean diedInsideMountain(Player victim) {
         Area bounds = RegionsConfig.get().biomeBounds(BiomeTeam.MOUNTAIN);
         if (bounds == null || !bounds.isComplete()) return false;
-        if (!bounds.dimension().equals(victim.level().dimension().identifier().toString())) return false;
+        if (!bounds.dimension().equals(victim.level().dimension().location().toString())) return false;
         return bounds.contains(victim.getX(), victim.getY(), victim.getZ());
     }
 

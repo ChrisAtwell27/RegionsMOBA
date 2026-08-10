@@ -73,9 +73,9 @@ public final class BardAbility {
 
     private static final List<Song> SONGS = List.of(
             new Song("Invigorate", Target.TEAM, MobEffects.REGENERATION, 0, 20 * 20, ChatFormatting.LIGHT_PURPLE),
-            new Song("Enlighten", Target.TEAM, MobEffects.SPEED, 0, 25 * 20, ChatFormatting.AQUA),
+            new Song("Enlighten", Target.TEAM, MobEffects.MOVEMENT_SPEED, 0, 25 * 20, ChatFormatting.AQUA),
             new Song("Intimidate", Target.ENEMY, MobEffects.WEAKNESS, 2, 20 * 20, ChatFormatting.DARK_GRAY),
-            new Song("Shackle", Target.ENEMY, MobEffects.SLOWNESS, 1, 15 * 20, ChatFormatting.BLUE));
+            new Song("Shackle", Target.ENEMY, MobEffects.MOVEMENT_SLOWDOWN, 1, 15 * 20, ChatFormatting.BLUE));
 
     private static final class Buffbox {
         final BlockPosData pos;
@@ -121,7 +121,7 @@ public final class BardAbility {
         MatchPlayerState state = TeamAssignments.get().state(bard.getUUID());
         if (state == null || state.team == null) return true;
 
-        ServerLevel level = bard.level();
+        ServerLevel level = bard.serverLevel();
         BlockPos target = hit.getBlockPos().relative(hit.getDirection());
         if (!level.getBlockState(target).canBeReplaced()) {
             tell(bard, "No room to place the Buffbox there.", ChatFormatting.GRAY);
@@ -235,7 +235,7 @@ public final class BardAbility {
     }
 
     private static Map.Entry<UUID, Buffbox> boxAt(ServerLevel level, BlockPos pos) {
-        String dimension = level.dimension().identifier().toString();
+        String dimension = level.dimension().location().toString();
         for (Map.Entry<UUID, Buffbox> entry : BOXES.entrySet()) {
             Buffbox box = entry.getValue();
             if (box.pos.toBlockPos().equals(pos) && box.pos.dimensionOrDefault().equals(dimension)) {

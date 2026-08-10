@@ -7,6 +7,8 @@
 		"FurnaceAccessor",
 		"LevelSetBlockMixin",
 		"MerchantMenuTradeSoundMixin",
+		"PlayerExperienceMixin",
+		"PlayerSneakMixin",
 		"PlayerSwingMixin",
 		"SignEditValidationMixin"
 	],

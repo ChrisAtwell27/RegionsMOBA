@@ -6,9 +6,9 @@ import com.regionsmoba.classes.AbilityHooks;
 import com.regionsmoba.classes.Cooldowns;
 import com.regionsmoba.classes.DamageModifiers;
 import com.regionsmoba.classes.impl.BardAbility;
-import com.regionsmoba.classes.impl.DefenderAbility;
 import com.regionsmoba.classes.impl.BerserkerAbility;
 import com.regionsmoba.classes.impl.BloodmageAbility;
+import com.regionsmoba.classes.impl.DefenderAbility;
 import com.regionsmoba.classes.impl.ImmobilizerAbility;
 import com.regionsmoba.classes.impl.LumberjackAbility;
 import com.regionsmoba.classes.impl.MinerAbility;
@@ -36,12 +36,12 @@ import com.regionsmoba.trader.TraderRespawn;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.level.Level;
 
 import java.util.Collection;
@@ -185,6 +185,9 @@ public final class MatchManager {
         com.regionsmoba.classes.impl.ArcherAbility.clearAll();
         com.regionsmoba.classes.impl.BloodmageTerraform.clearAll();
         com.regionsmoba.classes.impl.DefenderAlertItem.clearAll();
+        com.regionsmoba.classes.impl.BuilderCache.clearAll();
+        com.regionsmoba.classes.impl.EnchanterAbility.clearAll();
+        com.regionsmoba.classes.impl.AlchemistCauldron.clearAll();
         com.regionsmoba.timeline.DrownedSpawning.clearAll();
         Timeline.get().start();
         teleportJoinersToLobby();
@@ -213,7 +216,7 @@ public final class MatchManager {
         for (UUID id : matchPlayers) {
             ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null) continue;
-            p.teleportTo(level, x, y, z, java.util.Set.<Relative>of(), p.getYRot(), p.getXRot(), true);
+            p.teleportTo(level, x, y, z, java.util.Set.<RelativeMovement>of(), p.getYRot(), p.getXRot());
         }
     }
 
@@ -246,7 +249,7 @@ public final class MatchManager {
     private Set<ResourceKey<Level>> computeMatchDimensions() {
         Set<ResourceKey<Level>> dims = new HashSet<>();
         for (String dim : RegionsConfig.get().referencedDimensions()) {
-            Identifier id = Identifier.tryParse(dim);
+            ResourceLocation id = ResourceLocation.tryParse(dim);
             if (id != null) {
                 dims.add(ResourceKey.create(Registries.DIMENSION, id));
             }
@@ -318,6 +321,9 @@ public final class MatchManager {
         com.regionsmoba.classes.impl.ArcherAbility.clearAll();
         com.regionsmoba.classes.impl.BloodmageTerraform.clearAll();
         com.regionsmoba.classes.impl.DefenderAlertItem.clearAll();
+        com.regionsmoba.classes.impl.BuilderCache.clearAll();
+        com.regionsmoba.classes.impl.EnchanterAbility.clearAll();
+        com.regionsmoba.classes.impl.AlchemistCauldron.clearAll();
         com.regionsmoba.timeline.DrownedSpawning.clearAll();
         Timeline.get().stop();
 
@@ -375,6 +381,9 @@ public final class MatchManager {
         com.regionsmoba.classes.impl.ArcherAbility.clearAll();
         com.regionsmoba.classes.impl.BloodmageTerraform.clearAll();
         com.regionsmoba.classes.impl.DefenderAlertItem.clearAll();
+        com.regionsmoba.classes.impl.BuilderCache.clearAll();
+        com.regionsmoba.classes.impl.EnchanterAbility.clearAll();
+        com.regionsmoba.classes.impl.AlchemistCauldron.clearAll();
         com.regionsmoba.timeline.DrownedSpawning.clearAll();
         BuildMode.clearAll();
         Timeline.get().stop();

@@ -100,8 +100,8 @@ public final class WizardAbility {
     public static final int WHIRLWIND_FALL_IMMUNITY_TICKS = 5 * 20;
 
     private static final Holder<MobEffect> WITHER = MobEffects.WITHER;
-    private static final Holder<MobEffect> SLOWNESS = MobEffects.SLOWNESS;
-    private static final Holder<MobEffect> MINING_FATIGUE = MobEffects.MINING_FATIGUE;
+    private static final Holder<MobEffect> SLOWNESS = MobEffects.MOVEMENT_SLOWDOWN;
+    private static final Holder<MobEffect> MINING_FATIGUE = MobEffects.DIG_SLOWDOWN;
     private static final Holder<MobEffect> SLOW_FALLING = MobEffects.SLOW_FALLING;
 
     /** Selected spell per Wizard. Absent means the first spell. */
@@ -177,7 +177,7 @@ public final class WizardAbility {
     }
 
     private static void castInferno(ServerPlayer wizard, List<Player> enemies) {
-        ServerLevel level = wizard.level();
+        ServerLevel level = wizard.serverLevel();
         for (Player enemy : enemies) {
             enemy.igniteForSeconds(INFERNO_BURN_SECONDS);
             BlockPos feet = enemy.blockPosition();
@@ -195,9 +195,9 @@ public final class WizardAbility {
     }
 
     private static void castArcaneBolt(ServerPlayer wizard, List<Player> enemies) {
-        ServerLevel level = wizard.level();
+        ServerLevel level = wizard.serverLevel();
         for (Player enemy : enemies) {
-            enemy.hurtServer(level, level.damageSources().playerAttack(wizard), ARCANE_BOLT_DAMAGE);
+            enemy.hurt(level.damageSources().playerAttack(wizard), ARCANE_BOLT_DAMAGE);
         }
     }
 

@@ -4,12 +4,9 @@ import com.regionsmoba.RegionsMOBA;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.ValueInput;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,9 +61,7 @@ public final class WorldSnapshot {
                 if (entry.nbt() != null) {
                     BlockEntity be = level.getBlockEntity(pos);
                     if (be != null) {
-                        ValueInput in = TagValueInput.create(
-                                ProblemReporter.DISCARDING, level.registryAccess(), entry.nbt());
-                        be.loadWithComponents(in);
+                        be.loadWithComponents(entry.nbt(), level.registryAccess());
                         be.setChanged();
                     }
                 }
@@ -75,7 +70,7 @@ public final class WorldSnapshot {
             restoring = false;
             changes.clear();
         }
-        RegionsMOBA.LOGGER.info("Map repair: restored {} block(s) in {}", count, level.dimension().identifier());
+        RegionsMOBA.LOGGER.info("Map repair: restored {} block(s) in {}", count, level.dimension().location());
         return new RestoreResult(count);
     }
 

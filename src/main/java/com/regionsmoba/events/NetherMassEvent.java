@@ -8,8 +8,8 @@ import com.regionsmoba.team.BiomeTeam;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
 
 /**
  * Nether mass event — single Wither at the registered wither spawn point.
@@ -29,7 +29,7 @@ public final class NetherMassEvent {
         }
         ServerLevel level = server.getLevel(spawn.dimensionKey());
         if (level == null) return;
-        Entity e = EntityType.WITHER.spawn(level, spawn.toBlockPos(), EntitySpawnReason.EVENT);
+        Entity e = EntityType.WITHER.spawn(level, spawn.toBlockPos(), MobSpawnType.EVENT);
         if (e == null) return;
         ModEntities.track(e);
         MassEventTargeting.get().tag(e, BiomeTeam.NETHER);

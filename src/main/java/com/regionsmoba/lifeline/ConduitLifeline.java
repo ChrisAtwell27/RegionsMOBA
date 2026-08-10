@@ -38,7 +38,7 @@ public final class ConduitLifeline {
             BlockPosData conduit = RegionsConfig.get().conduit;
             if (conduit == null) return true;
             if (pos.getX() != conduit.x() || pos.getY() != conduit.y() || pos.getZ() != conduit.z()) return true;
-            if (!world.dimension().identifier().toString().equals(conduit.dimensionOrDefault())) return true;
+            if (!world.dimension().location().toString().equals(conduit.dimensionOrDefault())) return true;
             if (!(player instanceof ServerPlayer sp)) return false;
 
             MatchPlayerState attackerState = TeamAssignments.get().state(sp.getUUID());
@@ -61,7 +61,7 @@ public final class ConduitLifeline {
             ls.conduitHp--;
             MinecraftServer server = sp.level().getServer();
             RegionsMOBA.LOGGER.info("Conduit hit by {} ({}); HP {}/{}",
-                    sp.getGameProfile().name(), attackerState.team.id(), ls.conduitHp, LifelineState.CONDUIT_MAX_HP);
+                    sp.getGameProfile().getName(), attackerState.team.id(), ls.conduitHp, LifelineState.CONDUIT_MAX_HP);
             broadcastToOcean(server, Component.literal("Conduit: " + ls.conduitHp + " / " + LifelineState.CONDUIT_MAX_HP)
                     .withStyle(ChatFormatting.AQUA));
             if (ls.conduitHp <= 0) {

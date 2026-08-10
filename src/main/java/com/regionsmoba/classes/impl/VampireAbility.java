@@ -14,7 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
@@ -50,7 +50,7 @@ public final class VampireAbility {
     private VampireAbility() {}
 
     public static void onMeleeHit(ServerPlayer attacker, Player victim) {
-        ServerLevel level = attacker.level();
+        ServerLevel level = attacker.serverLevel();
         long dayTime = level.getDayTime() % 24000L;
         boolean night = dayTime >= 13000L && dayTime <= 23000L;
         float chance = night ? STEAL_CHANCE_NIGHT : STEAL_CHANCE_DAY;
@@ -110,11 +110,11 @@ public final class VampireAbility {
             return true; // ability silently fails per docs — but we still consume the click
         }
         Vec3 behind = target.position().subtract(target.getLookAngle().scale(1.2));
-        ServerLevel level = player.level();
+        ServerLevel level = player.serverLevel();
         player.teleportTo(level, behind.x, behind.y, behind.z,
-                Set.<Relative>of(), target.getYRot(), player.getXRot(), true);
+                Set.<RelativeMovement>of(), target.getYRot(), player.getXRot());
         Cooldowns.get().set(player, "vampire:dispatch", DISPATCH_COOLDOWN_SECONDS);
-        tell(player, "Insidious Dispatch → " + target.getGameProfile().name(), ChatFormatting.DARK_RED);
+        tell(player, "Insidious Dispatch → " + target.getGameProfile().getName(), ChatFormatting.DARK_RED);
         return true;
     }
 

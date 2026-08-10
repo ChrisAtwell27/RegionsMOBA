@@ -50,14 +50,14 @@ public final class NeptuneGroundFreeze {
             MatchPlayerState s = TeamAssignments.get().state(id);
             if (s == null || s.biomeClass != BiomeClass.OCEAN_NEPTUNE) continue;
             if (p.isUnderWater()) continue; // doc rule
-            // Only act when Neptune is holding the trident, to keep the cost low.
-            if (!p.getMainHandItem().is(net.minecraft.world.item.Items.TRIDENT)) continue;
+            // The freeze is a toggle now — see NeptuneAbility's ice-block handler.
+            if (!NeptuneAbility.isFreezeEnabled(id)) continue;
             freezeForward(p);
         }
     }
 
     private static void freezeForward(ServerPlayer neptune) {
-        ServerLevel level = neptune.level();
+        ServerLevel level = neptune.serverLevel();
         BlockPos centre = neptune.blockPosition();
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         for (int dx = -SIDE_RANGE; dx <= SIDE_RANGE; dx++) {

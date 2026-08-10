@@ -51,18 +51,18 @@ public final class SirenAbility {
             return true;
         }
         float threshold = target.getMaxHealth() * EXECUTE_THRESHOLD;
-        ServerLevel level = siren.level();
+        ServerLevel level = siren.serverLevel();
         if (target.getHealth() <= threshold) {
             float healed = target.getHealth();
-            target.hurtServer(level, level.damageSources().magic(), Float.MAX_VALUE);
+            target.hurt(level.damageSources().magic(), Float.MAX_VALUE);
             siren.heal(healed);
-            tell(siren, "Drained " + target.getGameProfile().name() + " — +" + healed + " HP",
+            tell(siren, "Drained " + target.getGameProfile().getName() + " — +" + healed + " HP",
                     ChatFormatting.DARK_RED);
         } else {
             float shortfall = target.getHealth() - threshold;
             // True damage to Siren — bypass armor/resistance via generic source.
-            siren.hurtServer(level, level.damageSources().magic(), shortfall);
-            tell(siren, target.getGameProfile().name() + " too healthy — backlash " + shortfall + " HP",
+            siren.hurt(level.damageSources().magic(), shortfall);
+            tell(siren, target.getGameProfile().getName() + " too healthy — backlash " + shortfall + " HP",
                     ChatFormatting.RED);
         }
         Cooldowns.get().set(siren, "siren:drain", COOLDOWN_SECONDS);
