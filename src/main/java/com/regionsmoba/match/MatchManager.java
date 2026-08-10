@@ -130,6 +130,14 @@ public final class MatchManager {
     }
 
     /**
+     * Adds one player to a running match. Used by the debug tooling to let an
+     * operator enter a match started with no joiners. No-op if already present.
+     */
+    public void addMatchPlayer(UUID player) {
+        matchPlayers.add(player);
+    }
+
+    /**
      * Transitions DORMANT/LOBBY → ACTIVE with no joiners. Used by /regions start
      * (manual) when an operator wants to start a match without the sign flow.
      */
@@ -162,6 +170,7 @@ public final class MatchManager {
         NationsLobbyRegistry.get().clearAll();
         TeamAssignments.get().reset(matchPlayers);
         LifelineState.get().resetAll();
+        com.regionsmoba.debug.TestMode.clear();
         LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
@@ -299,6 +308,7 @@ public final class MatchManager {
         matchPlayers.clear();
         TeamAssignments.get().clearAll();
         LifelineState.get().resetAll();
+        com.regionsmoba.debug.TestMode.clear();
         LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();
@@ -359,6 +369,7 @@ public final class MatchManager {
         matchPlayers.clear();
         TeamAssignments.get().clearAll();
         LifelineState.get().resetAll();
+        com.regionsmoba.debug.TestMode.clear();
         LifelineBars.get().clearAll();
         DepositTracker.get().resetAll();
         PermanentLossTracker.get().resetAll();

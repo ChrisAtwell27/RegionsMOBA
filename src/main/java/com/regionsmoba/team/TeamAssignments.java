@@ -37,6 +37,20 @@ public final class TeamAssignments {
         totalPlayers = joiners.size();
     }
 
+    /**
+     * Ensures one player has match state, without disturbing anyone else.
+     * Distinct from {@link #reset(java.util.Collection)}, which clears everything.
+     * No-op if the player already has state.
+     *
+     * Keeps {@code totalPlayers} in step so it never diverges from
+     * {@code states.size()} — {@code teamCap()} is derived from it.
+     */
+    public void join(UUID player) {
+        if (states.putIfAbsent(player, new MatchPlayerState()) == null) {
+            totalPlayers++;
+        }
+    }
+
     public void clearAll() {
         states.clear();
         totalPlayers = 0;

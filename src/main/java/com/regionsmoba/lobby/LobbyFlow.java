@@ -123,13 +123,15 @@ public final class LobbyFlow {
 
     // ---- Helpers ----
 
-    private static void openTeamPicker(ServerPlayer sp) {
+    /** Public so the debug tooling can drop an operator straight into team selection. */
+    public static void openTeamPicker(ServerPlayer sp) {
         sp.openMenu(new SimpleMenuProvider(
                 (syncId, inv, player) -> new TeamPickerMenu(syncId, inv),
                 TeamPickerMenu.TITLE));
     }
 
-    private static void openClassPicker(ServerPlayer sp, BiomeTeam team) {
+    /** Public so the debug team-switch can re-prompt for a class on the new team. */
+    public static void openClassPicker(ServerPlayer sp, BiomeTeam team) {
         sp.openMenu(new SimpleMenuProvider(
                 (syncId, inv, player) -> new ClassPickerMenu(syncId, inv, team),
                 ClassPickerMenu.title(team)));

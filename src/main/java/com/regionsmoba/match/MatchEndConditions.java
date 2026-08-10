@@ -1,6 +1,7 @@
 package com.regionsmoba.match;
 
 import com.regionsmoba.RegionsMOBA;
+import com.regionsmoba.debug.TestMode;
 import com.regionsmoba.events.PermanentLossTracker;
 import com.regionsmoba.team.BiomeTeam;
 import com.regionsmoba.team.MatchPlayerState;
@@ -32,6 +33,8 @@ public final class MatchEndConditions {
 
     public static void tick(MinecraftServer server, long globalTick) {
         if (!MatchManager.get().isActive() || server == null) return;
+        // Solo playtests: never auto-end or declare a winner while test mode is on.
+        if (TestMode.isActive()) return;
         if (globalTick % CHECK_INTERVAL_TICKS != 0) return;
 
         // Only evaluate once at least 2 teams have been assigned at some point —
